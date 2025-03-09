@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Karten Spiel Tracker</title>
+    <script src="./chart.js"></script>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+      }
+      .button {
+        padding: 10px;
+        margin: 5px;
+        font-size: 16px;
+        cursor: pointer;
+        min-width: 100px;
+        border: none;
+        border-radius: 5px;
+      }
+      .green {
+        background-color: #3ed600;
+        color: white;
+      }
+      .red {
+        background-color: #f72b2b;
+        color: white;
+      }
+      .blue {
+        background-color: #16b1ff;
+        color: white;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Bilanz: <span id="balance">0.00</span></h1>
+    <div>
+      <button class="button blue" onclick="addAmount(0.10)">0,10 €</button>
+      <button class="button blue" onclick="addAmount(0.20)">0,20 €</button>
+      <button class="button blue" onclick="addAmount(0.50)">0,50 €</button>
+      <button class="button blue" onclick="resetChoice()">Zurücksetzen</button>
+    </div>
+    <div>Ausgewählt: <span id="selectedAmount"></span></div>
+    <div>
+      <button class="button green" onclick="confirmTransaction('plus')">
+        +
+      </button>
+      <button class="button red" onclick="confirmTransaction('minus')">
+        -
+      </button>
+    </div>
+    <canvas id="chart" width="400" height="500"></canvas>
+    <div>
+      <button class="button" onclick="deleteLastRound()">Runde löschen</button>
+      <button class="button" onclick="reset()">Reset</button>
+    </div>
+
+    <script>
+      let balance = parseFloat(localStorage.getItem("balance")) || 0;
+      let history = JSON.parse(localStorage.getItem("history")) || [];
+      let tempAmount = 0;
+      updateSelectedAmount(tempAmount);
+      const balanceElement = document.getElementById("balance");
+      const ctx = document.getElementById("chart").getContext("2d");
+
+      let chart = new Chart(ctx, {
+        type: "line",
+        data: {
+          labels: history.map((_, i) => `Runde ${i + 1}`),
+          datasets: [
+            {
+              label: "Bilanz",
+              data: history,
+              borderColor: "blue",
+              fill: false,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          scales: {
+            x: { display: true },
+            y: { display: true },
+          },
+        },
+      });
+
+      updateBalance(balance);
+
+      function updateBalance(balance) {
+        balanceElement.innerText = parseFloat(balance).toLocaleString("de-DE", {
+          style: "currency",
+          currency: "EUR",
+        });
+      }
+
+      function updateSelectedAmount(tempAmount) {
+        var value = parseFloat(tempAmount).toLocaleString("de-DE", {
+          style: "currency",
+          currency: "EUR",
+        });
+        document.getElementById("selectedAmount").innerText = value;
+      }
+
+      function reset() {
+        tempAmount = 0;
+        balance = 0;
+        history = [];
+        updateLocalStorage();
+        updateBalance(balance);
+        updateChart();
+        updateSelectedAmount(tempAmount);
+      }
+
+      function addAmount(amount) {
+        tempAmount += amount;
+        updateSelectedAmount(tempAmount);
+      }
+
+      function deleteLastRound() {
+        history.pop();
+        balance = history[history.length - 1];
+        updateBalance(balance);
+        updateSelectedAmount(tempAmount);
+        updateLocalStorage();
+        updateChart();
+      }
+
+      function resetChoice() {
+        tempAmount = 0;
+        updateSelectedAmount(tempAmount);
+      }
+
+      function confirmTransaction(type) {
+        balance = type === "plus" ? balance + tempAmount : balance - tempAmount;
+        history.push(balance);
+        updateBalance(balance);
+        updateLocalStorage();
+        updateChart();
+        tempAmount = 0;
+        updateSelectedAmount(tempAmount);
+      }
+
+      function updateLocalStorage() {
+        localStorage.setItem("balance", balance);
+        localStorage.setItem("history", JSON.stringify(history));
+      }
+
+      function updateChart() {
+        chart.data.labels = history.map((_, i) => `Runde ${i + 1}`);
+        chart.data.datasets[0].data = history;
+        chart.update();
+      }
+    </script>
+  </body>
+</html>
