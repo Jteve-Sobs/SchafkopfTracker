@@ -3,8 +3,31 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Karten Spiel Tracker</title>
+    <title>Schafkopf Tracker</title>
     <script src="./chart.js"></script>
+    <link rel="manifest" href="manifest.json" />
+    <!-- <script src="script.js" defer></script> -->
+    <script type="module">
+      import { getVersion } from "./version.js";
+
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker
+          .register("sw.js", { type: "module" })
+          .then((registration) => {
+            console.log("Service Worker registered!", registration);
+          })
+          .catch((error) => {
+            console.error("Service Worker registration failed:", error);
+          });
+      }
+
+      async function displayVersion() {
+        const version = await getVersion();
+        document.getElementById("version").textContent = `V${version}`;
+      }
+
+      displayVersion();
+    </script>
     <style>
       body {
         font-family: Arial, sans-serif;
@@ -31,6 +54,20 @@
         background-color: #16b1ff;
         color: white;
       }
+      footer {
+        position: fixed;
+        bottom: 0;
+        width: 100%;
+        background-color: #f1f1f1;
+        text-align: center;
+        padding: 10px 0;
+        font-size: 12px;
+        color: #555;
+      }
+      .spacer {
+        height: 50px;
+        min-height: 50px;
+      }
     </style>
   </head>
   <body>
@@ -55,6 +92,8 @@
       <button class="button" onclick="deleteLastRound()">Runde löschen</button>
       <button class="button" onclick="reset()">Reset</button>
     </div>
+    <div class="spacer"></div>
+    <footer id="version">Loading...</footer>
 
     <script>
       let balance = parseFloat(localStorage.getItem("balance")) || 0;
@@ -119,8 +158,16 @@
       }
 
       function deleteLastRound() {
+        if (history.length == 0) {
+          return;
+        }
         history.pop();
-        balance = history[history.length - 1];
+        if (history.length != 0) {
+          balance = history[history.length - 1];
+        } else {
+          balance = 0;
+        }
+
         updateBalance(balance);
         updateSelectedAmount(tempAmount);
         updateLocalStorage();
