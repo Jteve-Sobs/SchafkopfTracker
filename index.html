@@ -20,9 +20,8 @@
         navigator.serviceWorker.register("sw.js").then((reg) => {
           fetch("https://tracker.florian-reichert.de/version.json", {
             cache: "reload",
-          })
-            .then((response) => response.json())
-            .then((data) => console.log(data));
+          }).then((response) => response.json());
+          // .then((data) => console.log(data));
 
           reg.onupdatefound = () => {
             const newWorker = reg.installing;
@@ -311,7 +310,6 @@
 
       function confirmTransaction(type) {
         balance = type === "plus" ? balance + tempAmount : balance - tempAmount;
-        console.log(balance);
         balance = Math.round(balance * 100) / 100;
         history.push(balance);
         updateBalance(balance);
