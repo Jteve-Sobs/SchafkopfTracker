@@ -218,7 +218,7 @@
               timer: 1200,
               timerProgressBar: true,
               didOpen: () => {
-                Swal.showLoading();
+                // Swal.showLoading();
                 const timer = Swal.getPopup().querySelector("b");
                 timerInterval = setInterval(() => {
                   timer.textContent = `${Swal.getTimerLeft()}`;
@@ -268,7 +268,7 @@
               timer: 1200,
               timerProgressBar: true,
               didOpen: () => {
-                Swal.showLoading();
+                // Swal.showLoading();
                 const timer = Swal.getPopup().querySelector("b");
                 timerInterval = setInterval(() => {
                   timer.textContent = `${Swal.getTimerLeft()}`;
