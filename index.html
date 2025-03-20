@@ -156,9 +156,14 @@
 
       let balance = parseFloat(localStorage.getItem("balance")) || 0;
       let history = JSON.parse(localStorage.getItem("history")) || [];
+
       let tempAmount = 0;
       updateSelectedAmount(tempAmount);
+
+      setDeleteButtonsEnabled();
+
       const balanceElement = document.getElementById("balance");
+
       const ctx = document.getElementById("chart").getContext("2d");
 
       let chart = new Chart(ctx, {
@@ -319,6 +324,18 @@
       function updateLocalStorage() {
         localStorage.setItem("balance", balance);
         localStorage.setItem("history", JSON.stringify(history));
+
+        setDeleteButtonsEnabled();
+      }
+
+      function setDeleteButtonsEnabled() {
+        if (history.length > 0) {
+          resetButton.disabled = false;
+          deleteLastRoundButton.disabled = false;
+        } else {
+          resetButton.disabled = true;
+          deleteLastRoundButton.disabled = true;
+        }
       }
 
       function updateChart() {
