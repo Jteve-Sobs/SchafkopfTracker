@@ -5,20 +5,45 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Schafkopf Tracker</title>
     <script src="./chart.js"></script>
+    <script src="./sweetalert.js"></script>
     <link rel="manifest" href="manifest.json" />
     <!-- <script src="script.js" defer></script> -->
     <script type="module">
       import { getVersion } from "./version.js";
 
+      // Clear the reload flag after the page reloads
+      if (localStorage.getItem("swUpdated")) {
+        localStorage.removeItem("swUpdated");
+      }
+
       if ("serviceWorker" in navigator) {
-        navigator.serviceWorker
-          .register("sw.js", { type: "module" })
-          .then((registration) => {
-            console.log("Service Worker registered!", registration);
+        navigator.serviceWorker.register("sw.js").then((reg) => {
+          fetch("https://tracker.florian-reichert.de/version.json", {
+            cache: "reload",
           })
-          .catch((error) => {
-            console.error("Service Worker registration failed:", error);
-          });
+            .then((response) => response.json())
+            .then((data) => console.log(data));
+
+          reg.onupdatefound = () => {
+            const newWorker = reg.installing;
+            newWorker.onstatechange = () => {
+              if (
+                newWorker.state === "installed" &&
+                navigator.serviceWorker.controller
+              ) {
+                console.log("Neue Version verfügbar!");
+
+                // Prevent infinite reloads
+                if (!localStorage.getItem("swUpdated")) {
+                  localStorage.setItem("swUpdated", "true");
+                  setTimeout(() => {
+                    window.location.reload(); // Reload to fetch new files
+                  }, 1000); // Shorter delay for testing
+                }
+              }
+            };
+          };
+        });
       }
 
       async function displayVersion() {
@@ -68,6 +93,9 @@
         height: 50px;
         min-height: 50px;
       }
+      .hidden {
+        visibility: none;
+      }
     </style>
   </head>
   <body>
@@ -89,13 +117,39 @@
     </div>
     <canvas id="chart" width="400" height="500"></canvas>
     <div>
-      <button class="button" onclick="deleteLastRound()">Runde löschen</button>
-      <button class="button" onclick="reset()">Reset</button>
+      <button
+        class="button"
+        id="deleteLastRoundButton"
+        onclick="deleteLastRound()"
+      >
+        Runde löschen
+      </button>
+      <button class="button" id="resetButton" onclick="reset()">Reset</button>
+      <!-- <button
+        class="button"
+        id="updateAvailableButton"
+        onclick="updateServiceWorker()"
+      >
+        Update verfügbar
+      </button> -->
     </div>
     <div class="spacer"></div>
     <footer id="version">Loading...</footer>
 
     <script>
+      // function updateServiceWorker() {
+      //   if ("serviceWorker" in navigator) {
+      //     navigator.serviceWorker.getRegistrations().then((registrations) => {
+      //       for (let reg of registrations) {
+      //         reg.update().then(() => {
+      //           console.log("Service Worker wurde aktualisiert.");
+      //           window.location.reload();
+      //         });
+      //       }
+      //     });
+      //   }
+      // }
+
       let balance = parseFloat(localStorage.getItem("balance")) || 0;
       let history = JSON.parse(localStorage.getItem("history")) || [];
       let tempAmount = 0;
@@ -143,13 +197,48 @@
       }
 
       function reset() {
-        tempAmount = 0;
-        balance = 0;
-        history = [];
-        updateLocalStorage();
-        updateBalance(balance);
-        updateChart();
-        updateSelectedAmount(tempAmount);
+        if (history.length == 0) {
+          return;
+        }
+
+        Swal.fire({
+          title: "Wollen Sie wirklich alle Runden löschen?",
+          text: "Dies kann nicht mehr rückgängig gemacht werden!",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonColor: "#3085d6",
+          cancelButtonColor: "#d33",
+          confirmButtonText: "Ja, löschen!",
+        }).then((result) => {
+          if (result.isConfirmed) {
+            Swal.fire({
+              title: "Gelöscht!",
+              text: "Alle Runden wurde gelöscht.",
+              icon: "success",
+              timer: 1200,
+              timerProgressBar: true,
+              didOpen: () => {
+                Swal.showLoading();
+                const timer = Swal.getPopup().querySelector("b");
+                timerInterval = setInterval(() => {
+                  timer.textContent = `${Swal.getTimerLeft()}`;
+                }, 100);
+              },
+              willClose: () => {
+                clearInterval(timerInterval);
+              },
+            });
+
+            // Functionality here
+            tempAmount = 0;
+            balance = 0;
+            history = [];
+            updateLocalStorage();
+            updateBalance(balance);
+            updateChart();
+            updateSelectedAmount(tempAmount);
+          }
+        });
       }
 
       function addAmount(amount) {
@@ -161,17 +250,49 @@
         if (history.length == 0) {
           return;
         }
-        history.pop();
-        if (history.length != 0) {
-          balance = history[history.length - 1];
-        } else {
-          balance = 0;
-        }
 
-        updateBalance(balance);
-        updateSelectedAmount(tempAmount);
-        updateLocalStorage();
-        updateChart();
+        Swal.fire({
+          title: "Wollen Sie die letzte Runde wirklich löschen?",
+          text: "Dies kann nicht mehr rückgängig gemacht werden!",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonColor: "#3085d6",
+          cancelButtonColor: "#d33",
+          confirmButtonText: "Ja, löschen!",
+        }).then((result) => {
+          if (result.isConfirmed) {
+            Swal.fire({
+              title: "Gelöscht!",
+              text: "Die letzte Runde wurde gelöscht.",
+              icon: "success",
+              timer: 1200,
+              timerProgressBar: true,
+              didOpen: () => {
+                Swal.showLoading();
+                const timer = Swal.getPopup().querySelector("b");
+                timerInterval = setInterval(() => {
+                  timer.textContent = `${Swal.getTimerLeft()}`;
+                }, 100);
+              },
+              willClose: () => {
+                clearInterval(timerInterval);
+              },
+            });
+
+            // Functionality here
+            history.pop();
+            if (history.length != 0) {
+              balance = history[history.length - 1];
+            } else {
+              balance = 0;
+            }
+
+            updateBalance(balance);
+            updateSelectedAmount(tempAmount);
+            updateLocalStorage();
+            updateChart();
+          }
+        });
       }
 
       function resetChoice() {
@@ -181,6 +302,8 @@
 
       function confirmTransaction(type) {
         balance = type === "plus" ? balance + tempAmount : balance - tempAmount;
+        console.log(balance);
+        balance = Math.round(balance * 100) / 100;
         history.push(balance);
         updateBalance(balance);
         updateLocalStorage();
