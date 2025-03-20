@@ -149,6 +149,10 @@
       //     });
       //   }
       // }
+      var resetButton = document.getElementById("resetButton");
+      var deleteLastRoundButton = document.getElementById(
+        "deleteLastRoundButton"
+      );
 
       let balance = parseFloat(localStorage.getItem("balance")) || 0;
       let history = JSON.parse(localStorage.getItem("history")) || [];
