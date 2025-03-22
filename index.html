@@ -89,8 +89,8 @@
         color: #555;
       }
       .spacer {
-        height: 50px;
-        min-height: 50px;
+        height: 1em;
+        min-height: 1em;
       }
       .hidden {
         visibility: none;
@@ -154,7 +154,7 @@
       );
 
       let balance = parseFloat(localStorage.getItem("balance")) || 0;
-      let history = JSON.parse(localStorage.getItem("history")) || [];
+      let history = JSON.parse(localStorage.getItem("history")) || [0];
 
       let tempAmount = 0;
       updateSelectedAmount(tempAmount);
@@ -165,6 +165,7 @@
 
       const ctx = document.getElementById("chart").getContext("2d");
 
+      var borderColor = balance < 0 ? "red" : "green";
       let chart = new Chart(ctx, {
         type: "line",
         data: {
@@ -173,7 +174,7 @@
             {
               label: "Bilanz",
               data: history,
-              borderColor: "blue",
+              borderColor: borderColor,
               fill: false,
             },
           ],
@@ -182,10 +183,33 @@
           responsive: true,
           scales: {
             x: { display: true },
-            y: { display: true },
+            y: {
+              display: true,
+              ticks: {
+                callback: function (value, index, values) {
+                  return parseFloat(value).toLocaleString("de-DE", {
+                    style: "currency",
+                    currency: "EUR",
+                  });
+                },
+              },
+              grid: {
+                // thicker line at y=0
+                drawBorder: true,
+                color: (context) =>
+                  context.tick.value === 0 ? "black" : "rgba(0, 0, 0, 0.1)",
+                lineWidth: (context) => (context.tick.value === 0 ? 1.01 : 1),
+              },
+            },
+          },
+          plugins: {
+            legend: {
+              display: false, // Hides the legend
+            },
           },
         },
       });
+      updateChart();
 
       updateBalance(balance);
 
@@ -205,7 +229,7 @@
       }
 
       function reset() {
-        if (history.length == 0) {
+        if (history.length <= 1) {
           return;
         }
 
@@ -225,6 +249,8 @@
               icon: "success",
               timer: 1200,
               timerProgressBar: true,
+              toast: true,
+              position: "bottom",
               didOpen: () => {
                 // Swal.showLoading();
                 const timer = Swal.getPopup().querySelector("b");
@@ -240,7 +266,7 @@
             // Functionality here
             tempAmount = 0;
             balance = 0;
-            history = [];
+            history = [0];
             updateLocalStorage();
             updateBalance(balance);
             updateChart();
@@ -255,7 +281,7 @@
       }
 
       function deleteLastRound() {
-        if (history.length == 0) {
+        if (history.length <= 1) {
           return;
         }
 
@@ -275,6 +301,8 @@
               icon: "success",
               timer: 1200,
               timerProgressBar: true,
+              toast: true,
+              position: "bottom",
               didOpen: () => {
                 // Swal.showLoading();
                 const timer = Swal.getPopup().querySelector("b");
@@ -289,7 +317,7 @@
 
             // Functionality here
             history.pop();
-            if (history.length != 0) {
+            if (history.length <= 1) {
               balance = history[history.length - 1];
             } else {
               balance = 0;
@@ -327,7 +355,7 @@
       }
 
       function setDeleteButtonsEnabled() {
-        if (history.length > 0) {
+        if (history.length > 1) {
           resetButton.disabled = false;
           deleteLastRoundButton.disabled = false;
         } else {
@@ -337,8 +365,13 @@
       }
 
       function updateChart() {
-        chart.data.labels = history.map((_, i) => `Runde ${i + 1}`);
+        chart.data.labels = history.map((_, i) => `Runde ${i}`);
+        chart.data.labels[0] = "Start";
         chart.data.datasets[0].data = history;
+
+        var borderColor = balance < 0 ? "red" : "green";
+        chart.data.datasets[0].borderColor = borderColor;
+
         chart.update();
       }
     </script>
