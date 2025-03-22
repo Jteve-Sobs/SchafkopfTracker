@@ -187,10 +187,7 @@
               display: true,
               ticks: {
                 callback: function (value, index, values) {
-                  return parseFloat(value).toLocaleString("de-DE", {
-                    style: "currency",
-                    currency: "EUR",
-                  });
+                  return formatCurrency(value);
                 },
               },
               grid: {
@@ -213,18 +210,20 @@
 
       updateBalance(balance);
 
-      function updateBalance(balance) {
-        balanceElement.innerText = parseFloat(balance).toLocaleString("de-DE", {
+      function formatCurrency(value) {
+        return parseFloat(value).toLocaleString("de-DE", {
           style: "currency",
           currency: "EUR",
         });
       }
 
+      function updateBalance(balance) {
+        balanceElement.innerText = formatCurrency(balance);
+      }
+
       function updateSelectedAmount(tempAmount) {
-        var value = parseFloat(tempAmount).toLocaleString("de-DE", {
-          style: "currency",
-          currency: "EUR",
-        });
+        // todo: create function to format currency
+        var value = formatCurrency(tempAmount);
         document.getElementById("selectedAmount").innerText = value;
       }
 
