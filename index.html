@@ -203,6 +203,16 @@
             legend: {
               display: false, // Hides the legend
             },
+            tooltip: {
+              callbacks: {
+                label: function (context) {
+                  return formatCurrency(context.parsed.y);
+                },
+              },
+              title: function (context) {
+                return `Runde ${context[0].dataIndex + 1}`;
+              },
+            },
           },
         },
       });
