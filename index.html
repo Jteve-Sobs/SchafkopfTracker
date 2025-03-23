@@ -206,7 +206,19 @@
             tooltip: {
               callbacks: {
                 label: function (context) {
-                  return formatCurrency(context.parsed.y);
+                  // handle the start value differently
+                  if (context.dataIndex === 0) {
+                    return "Gesamt: " + formatCurrency(context.parsed.y);
+                  } else {
+                    return [
+                      "Gesamt: " + formatCurrency(context.parsed.y),
+                      "Differenz: " +
+                        formatCurrency(
+                          context.parsed.y -
+                            context.dataset.data[context.dataIndex - 1]
+                        ),
+                    ];
+                  }
                 },
               },
               title: function (context) {
