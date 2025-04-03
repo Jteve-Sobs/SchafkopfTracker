@@ -213,7 +213,7 @@
         }
         const adjustment = sign === "+" ? 0.1 : -0.1;
         const newValue = (currentValue + adjustment).toFixed(2);
-        inputField.value = newValue.replace(".", ",") + " €"; //todo: manuelle Eingabe geht noch nicht
+        inputField.value = newValue.replace(".", ",") + " €"; //todo: manuelle Eingabe geht noch nicht //todo: nur Zahlen ermöglichen und Zahlenpad Eingabe aktivieren
       }
 
       function updateAmount() {
