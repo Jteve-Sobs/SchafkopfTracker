@@ -57,6 +57,10 @@
         font-family: Arial, sans-serif;
         text-align: center;
       }
+      h1 {
+        font-size: 30px;
+        margin: 15px 0;
+      }
       .button {
         padding: 10px;
         margin: 5px;
@@ -68,7 +72,7 @@
       }
       .buttonSmol {
         padding: 5px;
-        margin: 2px;
+        margin: 2px 0px;
         font-size: 14px;
         cursor: pointer;
         min-width: 40px;
@@ -141,11 +145,11 @@
     </div> -->
     <div class="selectorButtons">
       <button class="buttonSmol blue">Ramsch</button>
-      <!-- todo: bei Ausgewähltem Ramsch die Buttons anpassen für Typ anpassen -->
+      <!-- todo: bei Ausgewähltem Ramsch die Buttons für Typ anpassen -->
+      <!-- todo: Text aus JS? -->
       <button class="buttonSmol blue" data-type="default">Sauspiel</button>
-      <button class="buttonSmol blue">Geier / Wenz</button>
+      <button class="buttonSmol blue">Geier/Wenz</button>
       <button class="buttonSmol blue">Solo</button>
-      <button class="buttonSmol blue">Solo Tout</button>
       <button class="buttonSmol blue">Sie</button>
     </div>
     <div class="selectorButtons">
@@ -156,6 +160,8 @@
       <button class="buttonSmol blue" data-type="default">Schneiderfrei</button>
       <button class="buttonSmol blue">Schneider</button>
       <button class="buttonSmol blue">Schwarz</button>
+      <button class="buttonSmol blue">Tout</button>
+      <!-- todo: Tour nur bei Geier/Wenz und Solo anzeigen -->
     </div>
     <div class="selectorButtons">
       <button class="buttonSmol blue" data-type="default">Gewonnen</button>
@@ -166,8 +172,6 @@
       <!-- <button class="buttonSmol" onclick="adjustAmount('-')">-0,10 €</button> -->
       <input type="text" placeholder="0,00" />
       <!-- <button class="buttonSmol" onclick="adjustAmount('+')">+0,10 €</button> -->
-    </div>
-    <div>
       <button class="buttonSmol" onclick="confirmTransaction()">
         Hinzufügen
       </button>
@@ -209,7 +213,7 @@
         }
         const adjustment = sign === "+" ? 0.1 : -0.1;
         const newValue = (currentValue + adjustment).toFixed(2);
-        inputField.value = newValue.replace(".", ",") + " €";
+        inputField.value = newValue.replace(".", ",") + " €"; //todo: manuelle Eingabe geht noch nicht
       }
 
       function updateAmount() {
@@ -217,9 +221,8 @@
         const gameValues = {
           Ramsch: 0.1,
           Sauspiel: 0.2,
-          "Geier / Wenz": 0.3,
+          "Geier/Wenz": 0.3,
           Solo: 0.4,
-          "Solo Tout": 0.8,
           Sie: 1.6,
         };
 
@@ -228,6 +231,7 @@
           Schneiderfrei: 1,
           Schneider: 2,
           Schwarz: 4,
+          Tout: 8,
         };
 
         // Spielauswahl
@@ -252,9 +256,7 @@
         // Wenn verloren und ein bestimmtes Spiel, dann nochmal x3
         if (
           selectedPlayType === "Spieler" &&
-          ["Ramsch", "Geier / Wenz", "Solo", "Solo Tout", "Sie"].includes(
-            selectedGame
-          )
+          ["Ramsch", "Geier/Wenz", "Solo", "Sie"].includes(selectedGame)
         ) {
           amount *= 3;
         }
