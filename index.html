@@ -66,6 +66,16 @@
         border: none;
         border-radius: 5px;
       }
+      .buttonSmol {
+        padding: 5px;
+        margin: 2px;
+        font-size: 14px;
+        cursor: pointer;
+        min-width: 40px;
+        max-width: 95px;
+        border: none;
+        border-radius: 5px;
+      }
       .green {
         background-color: #3ed600;
         color: white;
@@ -75,8 +85,11 @@
         color: white;
       }
       .blue {
-        background-color: #16b1ff;
+        background-color: #16a1e7;
         color: white;
+      }
+      .active {
+        background-color: #0073ad;
       }
       footer {
         position: fixed;
@@ -95,11 +108,23 @@
       .hidden {
         visibility: none;
       }
+      input {
+        text-align: center;
+        padding: 5px;
+        margin: 2px;
+        font-size: 14px;
+        cursor: pointer;
+        min-width: 40px;
+        max-width: 90px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+      }
     </style>
   </head>
   <body>
     <h1>Bilanz: <span id="balance">0.00</span></h1>
-    <div>Ausgewählt: <span id="selectedAmount"></span></div>
+    <!-- todo: add legacy option -->
+    <!-- <div>Ausgewählt: <span id="selectedAmount"></span></div>
     <div>
       <button class="button blue" onclick="addAmount(0.10)">0,10 €</button>
       <button class="button blue" onclick="addAmount(0.20)">0,20 €</button>
@@ -113,6 +138,39 @@
       <button class="button red" onclick="confirmTransaction('minus')">
         -
       </button>
+    </div> -->
+    <div class="selectorButtons">
+      <button class="buttonSmol blue">Ramsch</button>
+      <!-- todo: bei Ausgewähltem Ramsch die Buttons anpassen für Typ anpassen -->
+      <button class="buttonSmol blue" data-type="default">Sauspiel</button>
+      <button class="buttonSmol blue">Geier / Wenz</button>
+      <button class="buttonSmol blue">Solo</button>
+      <button class="buttonSmol blue">Solo Tout</button>
+      <button class="buttonSmol blue">Sie</button>
+    </div>
+    <div class="selectorButtons">
+      <button class="buttonSmol blue" data-type="default">Spieler</button>
+      <button class="buttonSmol blue">Nichtspieler</button>
+    </div>
+    <div class="selectorButtons">
+      <button class="buttonSmol blue" data-type="default">Schneiderfrei</button>
+      <button class="buttonSmol blue">Schneider</button>
+      <button class="buttonSmol blue">Schwarz</button>
+    </div>
+    <div class="selectorButtons">
+      <button class="buttonSmol blue" data-type="default">Gewonnen</button>
+      <button class="buttonSmol blue">Verloren</button>
+      <!-- todo: für Ramsch muss hier eine Option rein, um ohne Geld aus dem Match rauszugehen -->
+    </div>
+    <div>
+      <!-- <button class="buttonSmol" onclick="adjustAmount('-')">-0,10 €</button> -->
+      <input type="text" placeholder="0,00" />
+      <!-- <button class="buttonSmol" onclick="adjustAmount('+')">+0,10 €</button> -->
+    </div>
+    <div>
+      <button class="buttonSmol" onclick="confirmTransaction()">
+        Hinzufügen
+      </button>
     </div>
     <canvas id="chart" width="400" height="500"></canvas>
     <div>
@@ -124,30 +182,118 @@
         Runde löschen
       </button>
       <button class="button" id="resetButton" onclick="reset()">Reset</button>
-      <!-- <button
-        class="button"
-        id="updateAvailableButton"
-        onclick="updateServiceWorker()"
-      >
-        Update verfügbar
-      </button> -->
     </div>
     <div class="spacer"></div>
     <footer id="version">Loading...</footer>
 
     <script>
-      // function updateServiceWorker() {
-      //   if ("serviceWorker" in navigator) {
-      //     navigator.serviceWorker.getRegistrations().then((registrations) => {
-      //       for (let reg of registrations) {
-      //         reg.update().then(() => {
-      //           console.log("Service Worker wurde aktualisiert.");
-      //           window.location.reload();
-      //         });
-      //       }
-      //     });
-      //   }
-      // }
+      let tempAmount = 0;
+      resetSelectorButtonsActionvationToDefault();
+      function resetSelectorButtonsActionvationToDefault() {
+        const buttons = document.querySelectorAll(".selectorButtons");
+        buttons.forEach((button) => {
+          button.querySelectorAll(".buttonSmol").forEach((btn) => {
+            btn.classList.remove("active");
+          });
+          button.querySelector('[data-type="default"]').classList.add("active");
+        });
+        updateAmount();
+      }
+
+      // Buttons for selecting amount
+      function adjustAmount(sign) {
+        const inputField = document.querySelector("input");
+        let currentValue = parseFloat(inputField.value.replace(",", "."));
+        if (isNaN(currentValue)) {
+          currentValue = 0;
+        }
+        const adjustment = sign === "+" ? 0.1 : -0.1;
+        const newValue = (currentValue + adjustment).toFixed(2);
+        inputField.value = newValue.replace(".", ",") + " €";
+      }
+
+      function updateAmount() {
+        // Spielarten mit ihren Grundbeträgen
+        const gameValues = {
+          Ramsch: 0.1,
+          Sauspiel: 0.2,
+          "Geier / Wenz": 0.3,
+          Solo: 0.4,
+          "Solo Tout": 0.8,
+          Sie: 1.6,
+        };
+
+        // Multiplikatoren für Schneider und Schwarz
+        const multipliers = {
+          Schneiderfrei: 1,
+          Schneider: 2,
+          Schwarz: 4,
+        };
+
+        // Spielauswahl
+        let selctorsButtons = document.querySelectorAll(".selectorButtons");
+        let selectedGame = selctorsButtons[0]
+          .querySelector(".active")
+          ?.textContent.trim();
+        let selectedPlayType = selctorsButtons[1]
+          .querySelector(".active")
+          ?.textContent.trim();
+        let selectedMultiplier = selctorsButtons[2]
+          .querySelector(".active")
+          ?.textContent.trim();
+        let selectedResult = selctorsButtons[3]
+          .querySelector(".active")
+          ?.textContent.trim();
+
+        let baseAmount = gameValues[selectedGame] || 0;
+        let multiplier = multipliers[selectedMultiplier] || 1;
+        let amount = baseAmount * multiplier;
+
+        // Wenn verloren und ein bestimmtes Spiel, dann nochmal x3
+        if (
+          selectedPlayType === "Spieler" &&
+          ["Ramsch", "Geier / Wenz", "Solo", "Solo Tout", "Sie"].includes(
+            selectedGame
+          )
+        ) {
+          amount *= 3;
+        }
+
+        // Ramsch als Nichtspieler verlieren
+        if (
+          selectedPlayType === "Nichtspieler" &&
+          selectedResult === "Verloren" &&
+          "Ramsch".includes(selectedGame)
+        ) {
+          amount *= 2;
+        }
+
+        // Gewinn oder Verlust berechnen
+        if (selectedResult === "Verloren") {
+          amount *= -1;
+        }
+
+        // Betrag in das Input-Feld schreiben
+        document.querySelector("input").value =
+          amount.toFixed(2).replace(".", ",") + " €";
+        tempAmount = amount;
+      }
+
+      // Initiale Berechnung beim Laden
+      updateAmount();
+
+      document.querySelectorAll(".selectorButtons").forEach((div) => {
+        div.addEventListener("click", (event) => {
+          if (event.target.classList.contains("buttonSmol")) {
+            div
+              .querySelectorAll(".buttonSmol")
+              .forEach((btn) => btn.classList.remove("active"));
+            event.target.classList.add("active");
+            updateAmount();
+          }
+        });
+      });
+
       var resetButton = document.getElementById("resetButton");
       var deleteLastRoundButton = document.getElementById(
         "deleteLastRoundButton"
@@ -156,7 +302,6 @@
       let balance = parseFloat(localStorage.getItem("balance")) || 0;
       let history = JSON.parse(localStorage.getItem("history")) || [0];
 
-      let tempAmount = 0;
       updateSelectedAmount(tempAmount);
 
       setDeleteButtonsEnabled();
@@ -246,6 +391,9 @@
       }
 
       function updateSelectedAmount(tempAmount) {
+        if (document.getElementById("selectedAmount") === null) {
+          return;
+        }
         // todo: create function to format currency
         var value = formatCurrency(tempAmount);
         document.getElementById("selectedAmount").innerText = value;
@@ -359,14 +507,16 @@
         updateSelectedAmount(tempAmount);
       }
 
-      function confirmTransaction(type) {
+      function confirmTransaction(type = "plus") {
         balance = type === "plus" ? balance + tempAmount : balance - tempAmount;
         balance = Math.round(balance * 100) / 100;
         history.push(balance);
         updateBalance(balance);
         updateLocalStorage();
         updateChart();
-        tempAmount = 0;
+        // tempAmount = 0;
+        resetSelectorButtonsActionvationToDefault();
+
         updateSelectedAmount(tempAmount);
       }
 
