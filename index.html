@@ -80,6 +80,14 @@
         border: none;
         border-radius: 5px;
       }
+      button:disabled,
+      button[disabled] {
+        background-color: #cccccc;
+        color: #666666;
+      }
+      .bordered {
+        border: 1px solid #000000;
+      }
       .green {
         background-color: #3ed600;
         color: white;
@@ -144,13 +152,14 @@
       </button>
     </div> -->
     <div class="selectorButtons">
-      <button class="buttonSmol blue">Ramsch</button>
-      <!-- todo: bei Ausgewähltem Ramsch die Buttons für Typ anpassen -->
+      <button class="buttonSmol blue" id="Ramsch">Ramsch</button>
       <!-- todo: Text aus JS? -->
-      <button class="buttonSmol blue" data-type="default">Sauspiel</button>
-      <button class="buttonSmol blue">Geier/Wenz</button>
-      <button class="buttonSmol blue">Solo</button>
-      <button class="buttonSmol blue">Sie</button>
+      <button class="buttonSmol blue" data-type="default" id="Sauspiel">
+        Sauspiel
+      </button>
+      <button class="buttonSmol blue" id="GeierWenz">Geier/Wenz</button>
+      <button class="buttonSmol blue" id="Solo">Solo</button>
+      <button class="buttonSmol blue" id="Sie">Sie</button>
     </div>
     <!-- todo: buttons deaktivieren abhängig vom Spielmodus -->
     <div class="selectorButtons">
@@ -158,13 +167,14 @@
       <button class="buttonSmol blue">Nichtspieler</button>
     </div>
     <div class="selectorButtons">
-      <button class="buttonSmol blue" data-type="default">Schneiderfrei</button>
-      <button class="buttonSmol blue">Schneider</button>
-      <button class="buttonSmol blue">Schwarz</button>
-      <button class="buttonSmol blue">Tout</button>
-      <!-- todo: Tour nur bei Geier/Wenz und Solo anzeigen -->
+      <button class="buttonSmol blue" data-type="default" id="Schneiderfrei">
+        Schneiderfrei
+      </button>
+      <button class="buttonSmol blue" id="Schneider">Schneider</button>
+      <button class="buttonSmol blue" id="Schwarz">Schwarz</button>
+      <button class="buttonSmol blue" id="Tout">Tout</button>
     </div>
-    <div class="selectorButtons">
+    <div class="selectorButtons" id="resultButtons">
       <button class="buttonSmol blue" data-type="default">Gewonnen</button>
       <button class="buttonSmol blue">Verloren</button>
       <!-- todo: für Ramsch muss hier eine Option rein, um ohne Geld aus dem Match rauszugehen -->
@@ -173,7 +183,7 @@
       <!-- <button class="buttonSmol" onclick="adjustAmount('-')">-0,10 €</button> -->
       <input type="text" placeholder="0,00" />
       <!-- <button class="buttonSmol" onclick="adjustAmount('+')">+0,10 €</button> -->
-      <button class="buttonSmol" onclick="confirmTransaction()">
+      <button class="buttonSmol blue bordered" onclick="confirmTransaction()">
         Hinzufügen
       </button>
     </div>
@@ -193,7 +203,84 @@
 
     <script>
       let tempAmount = 0;
-      resetSelectorButtonsActionvationToDefault();
+
+      const gameModes = {
+        Ramsch,
+        Sauspiel,
+        GeierWenz,
+        Solo,
+        Sie,
+      };
+
+      var ramschButton = document.getElementById("Ramsch");
+      var sauspielButton = document.getElementById("Sauspiel");
+      var geierWenzButton = document.getElementById("GeierWenz");
+      var soloButton = document.getElementById("Solo");
+      var sieButton = document.getElementById("Sie");
+      var schneiderfreiButton = document.getElementById("Schneiderfrei");
+      var schneiderButton = document.getElementById("Schneider");
+      var schwarzButton = document.getElementById("Schwarz");
+      var toutButton = document.getElementById("Tout");
+
+      function activateButtonsForGameModes(gameMode) {
+        switch (gameMode) {
+          case gameModes.Ramsch:
+            // Deactivate all invalid options
+            schneiderfreiButton.disabled = true;
+            schneiderButton.disabled = true;
+            schwarzButton.disabled = true;
+            toutButton.disabled = true;
+            // Set option to schneiderfrei
+            schneiderfreiButton.classList.add("active");
+            schneiderButton.classList.remove("active");
+            schwarzButton.classList.remove("active");
+            toutButton.classList.remove("active");
+            break;
+          case gameModes.Sauspiel:
+            // Activate all valid options
+            schneiderfreiButton.disabled = false;
+            schneiderButton.disabled = false;
+            schwarzButton.disabled = false;
+            // Deactivate all invalid options
+            toutButton.disabled = true;
+            // Set option to schneiderfrei if tout is active
+            if (toutButton.classList.contains("active")) {
+              toutButton.classList.remove("active");
+              schneiderfreiButton.classList.add("active");
+            }
+            break;
+          case gameModes.GeierWenz:
+            // Activate all valid options
+            schneiderfreiButton.disabled = false;
+            schneiderButton.disabled = false;
+            schwarzButton.disabled = false;
+            toutButton.disabled = false;
+            break;
+          case gameModes.Solo:
+            // Activate all valid options
+            schneiderfreiButton.disabled = false;
+            schneiderButton.disabled = false;
+            schwarzButton.disabled = false;
+            toutButton.disabled = false;
+            break;
+          case gameModes.Sie:
+            // Deactivate all invalid options
+            schneiderfreiButton.disabled = true;
+            schneiderButton.disabled = true;
+            schwarzButton.disabled = true;
+            toutButton.disabled = true;
+            // Set option to schneiderfrei
+            schneiderfreiButton.classList.add("active");
+            schneiderButton.classList.remove("active");
+            schwarzButton.classList.remove("active");
+            toutButton.classList.remove("active");
+            break;
+          default:
+            console.log("Invalid game mode selected.", gameMode);
+            break;
+        }
+      }
+
       function resetSelectorButtonsActionvationToDefault() {
         const buttons = document.querySelectorAll(".selectorButtons");
         buttons.forEach((button) => {
@@ -203,7 +290,9 @@
           button.querySelector('[data-type="default"]').classList.add("active");
         });
         updateAmount();
+        activateButtonsForGameModes(gameModes.Sauspiel);
       }
+      resetSelectorButtonsActionvationToDefault();
 
       // Buttons for selecting amount
       function adjustAmount(sign) {
@@ -218,13 +307,20 @@
       }
 
       function updateAmount() {
+        activateButtonsForGameModes(
+          gameModes[
+            document.querySelector(".selectorButtons").querySelector(".active")
+              ?.id
+          ]
+        );
+
         // Spielarten mit ihren Grundbeträgen
         const gameValues = {
           Ramsch: 0.1,
           Sauspiel: 0.2,
           "Geier/Wenz": 0.3,
           Solo: 0.4,
-          Sie: 1.6,
+          Sie: 6.4,
         };
 
         // Multiplikatoren für Schneider und Schwarz
@@ -262,12 +358,8 @@
           amount *= 3;
         }
 
-        // Ramsch als Nichtspieler verlieren
-        if (
-          selectedPlayType === "Nichtspieler" &&
-          selectedResult === "Verloren" &&
-          "Ramsch".includes(selectedGame)
-        ) {
+        // Ramsch verlieren -> einzahlen von 30cent in die Kasse
+        if (selectedResult === "Verloren" && "Ramsch".includes(selectedGame)) {
           amount *= 2;
         }
 
@@ -445,6 +537,7 @@
             updateBalance(balance);
             updateChart();
             updateSelectedAmount(tempAmount);
+            updateAmount();
           }
         });
       }
@@ -511,7 +604,18 @@
       }
 
       function confirmTransaction(type = "plus") {
-        balance = type === "plus" ? balance + tempAmount : balance - tempAmount;
+        const inputField = document.querySelector("input");
+        let currentValue = parseFloat(inputField.value.replace(",", "."));
+        if (isNaN(currentValue)) {
+          Swal.fire({
+            title: "Ungültiger Betrag",
+            text: "Bitte geben Sie einen gültigen Betrag ein.",
+            icon: "error",
+          });
+          return;
+        }
+
+        balance = balance + currentValue;
         balance = Math.round(balance * 100) / 100;
         history.push(balance);
         updateBalance(balance);
