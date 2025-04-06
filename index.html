@@ -131,6 +131,9 @@
         border: 1px solid #ccc;
         border-radius: 5px;
       }
+      .marginTop {
+        margin-top: 5px;
+      }
     </style>
   </head>
   <body>
@@ -179,10 +182,10 @@
       <button class="buttonSmol blue">Verloren</button>
       <!-- todo: für Ramsch muss hier eine Option rein, um ohne Geld aus dem Match rauszugehen -->
     </div>
-    <div>
-      <!-- <button class="buttonSmol" onclick="adjustAmount('-')">-0,10 €</button> -->
-      <input type="text" placeholder="0,00" />
-      <!-- <button class="buttonSmol" onclick="adjustAmount('+')">+0,10 €</button> -->
+    <div class="marginTop">
+      <button class="buttonSmol" onclick="adjustAmount('-')">-</button>
+      <input type="text" placeholder="0,00" inputmode="numeric" />
+      <button class="buttonSmol" onclick="adjustAmount('+')">+</button>
       <button class="buttonSmol blue bordered" onclick="confirmTransaction()">
         Hinzufügen
       </button>
