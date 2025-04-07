@@ -53,6 +53,59 @@
       displayVersion();
     </script>
     <style>
+      body.dark {
+        background-color: #121212;
+        color: #f0f0f0;
+      }
+      .dark h1 {
+        color: #ffffff;
+      }
+      .dark .button {
+        background-color: #2a2a2a;
+        color: #f0f0f0;
+      }
+      .dark .buttonSmol {
+        background-color: #2a2a2a;
+        color: #f0f0f0;
+      }
+      .dark button:disabled,
+      .dark button[disabled] {
+        background-color: #444444;
+        color: #888888;
+      }
+      .dark .bordered {
+        border: 1px solid #aaaaaa;
+      }
+      .dark .green {
+        background-color: #4caf50;
+      }
+      .dark .red {
+        background-color: #e53935;
+      }
+      .dark .blue {
+        background-color: #1e88e5;
+      }
+      .dark .active {
+        background-color: #004da4;
+      }
+      .dark footer {
+        background-color: #1f1f1f;
+        color: #aaaaaa;
+        border-top: 1px solid #333;
+      }
+      .dark input {
+        border: 1px solid #666;
+        background-color: #1e1e1e;
+        color: #f0f0f0;
+      }
+      .dark input:invalid {
+        border: 2px solid #ff5555;
+        background-color: #3b1e1e;
+      }
+      .dark .clear-btn {
+        color: #ff7777;
+      }
+
       body {
         font-family: Arial, sans-serif;
         text-align: center;
@@ -160,9 +213,23 @@
       input:invalid + .clear-btn {
         display: inline;
       }
+      #toggleDark {
+        position: fixed;
+        top: 10px;
+        left: 10px;
+        z-index: 1000;
+        padding: 7px 8px;
+        font-size: 14px;
+        background-color: #333;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+      }
     </style>
   </head>
   <body>
+    <button id="toggleDark">🌗</button>
     <h1>Bilanz: <span id="balance">0.00</span></h1>
     <!-- todo: add legacy option -->
     <!-- <div>Ausgewählt: <span id="selectedAmount"></span></div>
@@ -242,6 +309,12 @@
     <footer id="version">Loading...</footer>
 
     <script>
+      const toggleBtn = document.getElementById("toggleDark");
+
+      toggleBtn.addEventListener("click", () => {
+        document.body.classList.toggle("dark");
+      });
+
       let tempAmount = 0;
 
       // Logic for the clear button
