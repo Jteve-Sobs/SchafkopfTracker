@@ -131,8 +131,37 @@
         border: 1px solid #ccc;
         border-radius: 5px;
       }
+      input:invalid {
+        border: 2px solid red;
+        background-color: #ffe6e6;
+      }
       .marginTop {
         margin-top: 5px;
+      }
+      .input-wrapper {
+        position: relative;
+        display: inline-block;
+      }
+
+      input[type="text"] {
+        padding-right: 30px; /* space for the X */
+      }
+
+      .clear-btn {
+        position: absolute;
+        right: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        font-size: 16px;
+        cursor: pointer;
+        display: none;
+        color: red;
+      }
+
+      input:invalid + .clear-btn {
+        display: inline;
       }
     </style>
   </head>
@@ -156,7 +185,6 @@
     </div> -->
     <div class="selectorButtons">
       <button class="buttonSmol blue" id="Ramsch">Ramsch</button>
-      <!-- todo: Text aus JS? -->
       <button class="buttonSmol blue" data-type="default" id="Sauspiel">
         Sauspiel
       </button>
@@ -164,7 +192,6 @@
       <button class="buttonSmol blue" id="Solo">Solo</button>
       <button class="buttonSmol blue" id="Sie">Sie</button>
     </div>
-    <!-- todo: buttons deaktivieren abhängig vom Spielmodus -->
     <div class="selectorButtons">
       <button class="buttonSmol blue" data-type="default">Spieler</button>
       <button class="buttonSmol blue">Nichtspieler</button>
@@ -184,9 +211,22 @@
     </div>
     <div class="marginTop">
       <button class="buttonSmol" onclick="adjustAmount('-')">-</button>
-      <input type="text" placeholder="0,00" inputmode="numeric" />
+      <span class="input-wrapper">
+        <input
+          type="text"
+          placeholder="0,00"
+          inputmode="numeric"
+          pattern="^-?\d+(?:[,.]\d{1,2})?[ \xA0]?€?$"
+        />
+        <!-- in regex there is the non-breaking space (from formatCurrency function) -->
+        <button class="clear-btn" type="button" id="clearBtn">✖</button>
+      </span>
       <button class="buttonSmol" onclick="adjustAmount('+')">+</button>
-      <button class="buttonSmol blue bordered" onclick="confirmTransaction()">
+      <button
+        class="buttonSmol blue bordered"
+        onclick="confirmTransaction()"
+        id="confirmButton"
+      >
         Hinzufügen
       </button>
     </div>
@@ -206,6 +246,35 @@
 
     <script>
       let tempAmount = 0;
+
+      // Logic for the clear button
+      const inputField = document.querySelector("input");
+      const clearBtn = document.getElementById("clearBtn");
+
+      function toggleClearButton() {
+        if (inputField.value && !inputField.validity.valid) {
+          clearBtn.style.display = "inline";
+        } else {
+          clearBtn.style.display = "none";
+        }
+      }
+      inputField.addEventListener("input", toggleClearButton);
+      clearBtn.addEventListener("click", () => {
+        inputField.value = formatCurrency(0);
+        inputField.focus();
+        toggleClearButton();
+      });
+
+      const pattern = inputField.pattern;
+      const regex = new RegExp(pattern);
+      const confirmButton = document.getElementById("confirmButton");
+      inputField.addEventListener("input", () => {
+        if (regex.test(inputField.value)) {
+          confirmButton.disabled = false;
+        } else {
+          confirmButton.disabled = true;
+        }
+      });
 
       const gameModes = {
         Ramsch,
@@ -297,16 +366,15 @@
       }
       resetSelectorButtonsActionvationToDefault();
 
-      // Buttons for selecting amount
+      // Buttons for selecting amount +/- 0.10
       function adjustAmount(sign) {
-        const inputField = document.querySelector("input");
         let currentValue = parseFloat(inputField.value.replace(",", "."));
         if (isNaN(currentValue)) {
           currentValue = 0;
         }
         const adjustment = sign === "+" ? 0.1 : -0.1;
         const newValue = (currentValue + adjustment).toFixed(2);
-        inputField.value = newValue.replace(".", ",") + " €"; //todo: manuelle Eingabe geht noch nicht //todo: nur Zahlen ermöglichen und Zahlenpad Eingabe aktivieren
+        inputField.value = formatCurrency(newValue);
       }
 
       function updateAmount() {
@@ -361,6 +429,14 @@
           amount *= 3;
         }
 
+        // Möglichkeiten bei Ramsch
+        // Durchmarsch/Notspiel Spieler gewinnen: -> 0,30€
+        // Durchmarsch/Notspiel Nichtspieler gewinnen: -> 0,10€
+        // nicht gewinnen oder verlieren -> 0,00€
+        // Ramsch verlieren: -> -0,20€
+        // Notspiel verlieren: -> -0,20€
+        // Durchmarsch/Notspiel Spieler verlieren: -> -0,60€
+
         // Ramsch verlieren -> einzahlen von 30cent in die Kasse
         if (selectedResult === "Verloren" && "Ramsch".includes(selectedGame)) {
           amount *= 2;
@@ -372,8 +448,7 @@
         }
 
         // Betrag in das Input-Feld schreiben
-        document.querySelector("input").value =
-          amount.toFixed(2).replace(".", ",") + " €";
+        inputField.value = formatCurrency(amount);
         tempAmount = amount;
       }
 
@@ -492,7 +567,6 @@
         if (document.getElementById("selectedAmount") === null) {
           return;
         }
-        // todo: create function to format currency
         var value = formatCurrency(tempAmount);
         document.getElementById("selectedAmount").innerText = value;
       }
@@ -607,7 +681,6 @@
       }
 
       function confirmTransaction(type = "plus") {
-        const inputField = document.querySelector("input");
         let currentValue = parseFloat(inputField.value.replace(",", "."));
         if (isNaN(currentValue)) {
           Swal.fire({
