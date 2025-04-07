@@ -312,6 +312,9 @@
       const toggleBtn = document.getElementById("toggleDark");
       if (localStorage.getItem("darkmode") === "true") {
         document.body.classList.add("dark");
+        try {
+          updateChart();
+        } catch (e) {}
       }
       // Beim Klicken toggeln & speichern
       toggleBtn.addEventListener("click", () => {
@@ -320,6 +323,9 @@
           "darkmode",
           document.body.classList.contains("dark")
         );
+        try {
+          updateChart();
+        } catch (e) {}
       });
 
       let tempAmount = 0;
@@ -804,6 +810,24 @@
 
         var borderColor = balance < 0 ? "red" : "green";
         chart.data.datasets[0].borderColor = borderColor;
+
+        // Dark mode colors in chart
+        const darkMode = localStorage.getItem("darkmode") === "true";
+        const gridColor = darkMode ? "#444" : "#ccc";
+        const textColor = darkMode ? "#f0f0f0" : "#333";
+        const y0Color = darkMode ? "#f0f0f0" : "#333";
+
+        chart.options.scales.x.grid.color = gridColor;
+        chart.options.scales.y.grid.color = gridColor;
+        chart.options.scales.y.grid.lineWidth = function (context) {
+          return context.tick.value === 0 ? 1.2 : 1;
+        };
+        chart.options.scales.y.grid.color = function (context) {
+          return context.tick.value === 0 ? y0Color : gridColor;
+        };
+        chart.options.scales.x.ticks.color = textColor;
+        chart.options.scales.y.ticks.color = textColor;
+        chart.options.plugins.legend.labels.color = textColor;
 
         chart.update();
       }
