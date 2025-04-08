@@ -309,9 +309,19 @@
     <footer id="version">Loading...</footer>
 
     <script>
+      const toastDarkModeColor = "#ffffff";
+      const toastDarkModeBackgroundColor = "#19191a";
+      const toastLightModeColor = "#545454";
+      const toastLightModeBackgroundColor = "#ffffff";
+      var toastColor = toastLightModeColor;
+      var toastBackgroundColor = toastLightModeBackgroundColor;
       const toggleBtn = document.getElementById("toggleDark");
+      toggleBtn.innerHTML = "🌗";
       if (localStorage.getItem("darkmode") === "true") {
         document.body.classList.add("dark");
+        toastBackgroundColor = toastDarkModeBackgroundColor;
+        toastColor = toastDarkModeColor;
+        toggleBtn.innerHTML = "🌕";
         try {
           updateChart();
         } catch (e) {}
@@ -323,6 +333,15 @@
           "darkmode",
           document.body.classList.contains("dark")
         );
+        if (document.body.classList.contains("dark")) {
+          toastBackgroundColor = toastDarkModeBackgroundColor;
+          toastColor = toastDarkModeColor;
+          toggleBtn.innerHTML = "🌕";
+        } else {
+          toastBackgroundColor = toastLightModeBackgroundColor;
+          toastColor = toastLightModeColor;
+          toggleBtn.innerHTML = "🌗";
+        }
         try {
           updateChart();
         } catch (e) {}
@@ -667,6 +686,9 @@
           confirmButtonColor: "#3085d6",
           cancelButtonColor: "#d33",
           confirmButtonText: "Ja, löschen!",
+          cancelButtonText: "Abbrechen",
+          background: toastBackgroundColor,
+          color: toastColor,
         }).then((result) => {
           if (result.isConfirmed) {
             Swal.fire({
@@ -677,6 +699,8 @@
               timerProgressBar: true,
               toast: true,
               position: "bottom",
+              background: toastBackgroundColor,
+              color: toastColor,
               didOpen: () => {
                 // Swal.showLoading();
                 const timer = Swal.getPopup().querySelector("b");
@@ -720,6 +744,9 @@
           confirmButtonColor: "#3085d6",
           cancelButtonColor: "#d33",
           confirmButtonText: "Ja, löschen!",
+          cancelButtonText: "Abbrechen",
+          background: toastBackgroundColor,
+          color: toastColor,
         }).then((result) => {
           if (result.isConfirmed) {
             Swal.fire({
@@ -730,6 +757,8 @@
               timerProgressBar: true,
               toast: true,
               position: "bottom",
+              background: toastBackgroundColor,
+              color: toastColor,
               didOpen: () => {
                 // Swal.showLoading();
                 const timer = Swal.getPopup().querySelector("b");
@@ -770,6 +799,8 @@
             title: "Ungültiger Betrag",
             text: "Bitte geben Sie einen gültigen Betrag ein.",
             icon: "error",
+            background: toastBackgroundColor,
+            color: toastColor,
           });
           return;
         }
