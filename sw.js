@@ -14,6 +14,9 @@ async function getVersion() {
 const CACHE_NAME_PREFIX = "my-app-cache-";
 const urlsToCache = [
   "index.html",
+  "style.css",
+  "init.js",
+  "main.js",
   "chart.js",
   "version.js",
   "version.json",
