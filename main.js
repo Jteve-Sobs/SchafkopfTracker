@@ -259,6 +259,17 @@ var deleteLastRoundButton = document.getElementById("deleteLastRoundButton");
 
 let balance = parseFloat(localStorage.getItem("balance")) || 0;
 let history = JSON.parse(localStorage.getItem("history")) || [0];
+for (let i = 0; i < history.length; i++) {
+  // Convert from legacy format to new format
+  if (typeof history[i] === "number") {
+    history[i] = { amount: history[i], game: "-", teammates: [] };
+  }
+}
+// New format example
+// let history = [
+//   { amount: 1, game: "Geier", teammates: ["Flo"] },
+//   { amount: 1.2, game: "test1", teammates: ["Test"] },
+// ];
 
 updateSelectedAmount(tempAmount);
 
@@ -267,7 +278,7 @@ setDeleteButtonsEnabled();
 const balanceElement = document.getElementById("balance");
 
 const ctx = document.getElementById("chart").getContext("2d");
-
+console.log(history.map((x) => x.amount));
 var borderColor = balance < 0 ? "red" : "green";
 let chart = new Chart(ctx, {
   type: "line",
@@ -276,7 +287,7 @@ let chart = new Chart(ctx, {
     datasets: [
       {
         label: "Bilanz",
-        data: history,
+        data: history.map((x) => x.amount),
         borderColor: borderColor,
         fill: false,
         pointhoverradius: 10,
@@ -322,6 +333,7 @@ let chart = new Chart(ctx, {
                     context.parsed.y -
                       context.dataset.data[context.dataIndex - 1]
                   ),
+                "Spiel: " + history[context.dataIndex].game,
               ];
             }
           },
@@ -490,7 +502,12 @@ function confirmTransaction(type = "plus") {
 
   balance = balance + currentValue;
   balance = Math.round(balance * 100) / 100;
-  history.push(balance);
+  let tempItem = {
+    amount: balance,
+    game: "-",
+    teammates: [],
+  };
+  history.push(tempItem);
   updateBalance(balance);
   updateLocalStorage();
   updateChart();
@@ -520,7 +537,7 @@ function setDeleteButtonsEnabled() {
 function updateChart() {
   chart.data.labels = history.map((_, i) => `Runde ${i}`);
   chart.data.labels[0] = "Start";
-  chart.data.datasets[0].data = history;
+  chart.data.datasets[0].data = history.map((x) => x.amount);
 
   var borderColor = balance < 0 ? "red" : "green";
   chart.data.datasets[0].borderColor = borderColor;
