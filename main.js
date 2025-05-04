@@ -65,11 +65,11 @@ inputField.addEventListener("input", () => {
 });
 
 const gameModes = {
-  Ramsch,
-  Sauspiel,
-  GeierWenz,
-  Solo,
-  Sie,
+  Ramsch: "Ramsch",
+  Sauspiel: "Sauspiel",
+  GeierWenz: "Geier/Wenz",
+  Solo: "Solo",
+  Sie: "Sie",
 };
 
 var ramschButton = document.getElementById("Ramsch");
@@ -84,7 +84,9 @@ var toutButton = document.getElementById("Tout");
 var currentlySelectedGame =
   gameModes[
     document.querySelector(".selectorButtons").querySelector(".active")?.id
-  ]?.id;
+  ];
+var currentlySelectedPlayType;
+var currentlySelectedMultiplier;
 
 function activateButtonsForGameModes(gameMode) {
   switch (gameMode) {
@@ -95,7 +97,7 @@ function activateButtonsForGameModes(gameMode) {
       schwarzButton.disabled = true;
       toutButton.disabled = true;
       // Set option to schneiderfrei
-      schneiderfreiButton.classList.add("active");
+      schneiderfreiButton.classList.remove("active");
       schneiderButton.classList.remove("active");
       schwarzButton.classList.remove("active");
       toutButton.classList.remove("active");
@@ -134,7 +136,7 @@ function activateButtonsForGameModes(gameMode) {
       schwarzButton.disabled = true;
       toutButton.disabled = true;
       // Set option to schneiderfrei
-      schneiderfreiButton.classList.add("active");
+      schneiderfreiButton.classList.remove("active");
       schneiderButton.classList.remove("active");
       schwarzButton.classList.remove("active");
       toutButton.classList.remove("active");
@@ -173,7 +175,7 @@ function updateAmount() {
   currentlySelectedGame =
     gameModes[
       document.querySelector(".selectorButtons").querySelector(".active")?.id
-    ]?.id;
+    ];
   activateButtonsForGameModes(currentlySelectedGame);
 
   // Spielarten mit ihren Grundbeträgen
@@ -207,6 +209,9 @@ function updateAmount() {
   let selectedResult = selctorsButtons[3]
     .querySelector(".active")
     ?.textContent.trim();
+
+  currentlySelectedPlayType = selectedPlayType;
+  currentlySelectedMultiplier = selectedMultiplier;
 
   let baseAmount = gameValues[selectedGame] || 0;
   let multiplier = multipliers[selectedMultiplier] || 1;
@@ -507,9 +512,13 @@ function confirmTransaction(type = "plus") {
 
   balance = balance + currentValue;
   balance = Math.round(balance * 100) / 100;
+  var gameDetails = currentlySelectedGame + ", " + currentlySelectedPlayType;
+  if (currentlySelectedMultiplier !== undefined) {
+    gameDetails += ", " + currentlySelectedMultiplier;
+  }
   let tempItem = {
     amount: balance,
-    game: currentlySelectedGame,
+    game: gameDetails,
     teammates: [],
   };
   history.push(tempItem);
@@ -567,6 +576,78 @@ function updateChart() {
 
   chart.update();
 }
+
+// Import/Export history
+function generateTimestamp() {
+  const now = new Date();
+  const day = String(now.getDate()).padStart(2, "0");
+  const month = String(now.getMonth() + 1).padStart(2, "0"); // Monat ist 0-basiert
+  const year = now.getFullYear();
+  const hours = String(now.getHours()).padStart(2, "0");
+  const minutes = String(now.getMinutes()).padStart(2, "0");
+  const seconds = String(now.getSeconds()).padStart(2, "0");
+
+  return `${day}-${month}-${year}_${hours}-${minutes}-${seconds}`;
+}
+function exportHistory() {
+  const historyData = JSON.stringify(history, null, 2);
+  const blob = new Blob([historyData], { type: "application/json" });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = `schafkopf_tracker_history_${generateTimestamp()}.json`;
+  link.click();
+}
+document
+  .getElementById("importHistoryFile")
+  .addEventListener("change", (event) => {
+    // Sobald eine Datei ausgewählt wird, importieren wir sie
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+
+      reader.onload = function (e) {
+        try {
+          // Hier nehmen wir den Inhalt der Datei und setzen ihn als History
+          const importedHistory = JSON.parse(e.target.result);
+
+          if (Array.isArray(importedHistory)) {
+            history = importedHistory;
+            balance = history[history.length - 1].amount;
+            updateLocalStorage();
+            updateChart();
+            updateBalance(balance);
+
+            Swal.fire({
+              title: "Import erfolgreich!",
+              text: "Die Historie wurde erfolgreich geladen.",
+              icon: "success",
+              background: toastBackgroundColor,
+              color: toastColor,
+            });
+          } else {
+            throw new Error("Ungültiges Format.");
+          }
+        } catch (error) {
+          Swal.fire({
+            title: "Fehler!",
+            text: "Die Datei konnte nicht importiert werden. Stellen Sie sicher, dass sie das richtige Format hat.",
+            icon: "error",
+            background: toastBackgroundColor,
+            color: toastColor,
+          });
+        }
+      };
+
+      reader.readAsText(file);
+    }
+  });
+document
+  .getElementById("exportHistoryButton")
+  .addEventListener("click", exportHistory);
+document.getElementById("importHistoryButton").addEventListener("click", () => {
+  // Der Button löst die Datei-Auswahl aus
+  document.getElementById("importHistoryFile").click();
+});
 
 window.adjustAmount = adjustAmount;
 window.reset = reset;
