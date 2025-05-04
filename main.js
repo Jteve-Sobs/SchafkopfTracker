@@ -590,8 +590,13 @@ function generateTimestamp() {
   return `${day}-${month}-${year}_${hours}-${minutes}-${seconds}`;
 }
 function exportHistory() {
-  const historyData = JSON.stringify(history, null, 2);
-  const blob = new Blob([historyData], { type: "application/json" });
+  const data = {
+    current: history,
+    archive: JSON.parse(localStorage.getItem("archive") || "{}"),
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], {
+    type: "application/json",
+  });
   const link = document.createElement("a");
   link.href = URL.createObjectURL(blob);
   link.download = `schafkopf_tracker_history_${generateTimestamp()}.json`;
@@ -608,25 +613,38 @@ document
       reader.onload = function (e) {
         try {
           // Hier nehmen wir den Inhalt der Datei und setzen ihn als History
-          const importedHistory = JSON.parse(e.target.result);
+          const imported = JSON.parse(e.target.result);
 
-          if (Array.isArray(importedHistory)) {
-            history = importedHistory;
+          var errorOccurred = false;
+          var errorMessage = "";
+          if (imported.current && Array.isArray(imported.current)) {
+            localStorage.setItem("history", imported.current);
+            history = imported.current;
             balance = history[history.length - 1].amount;
             updateLocalStorage();
             updateChart();
             updateBalance(balance);
-
-            Swal.fire({
-              title: "Import erfolgreich!",
-              text: "Die Historie wurde erfolgreich geladen.",
-              icon: "success",
-              background: toastBackgroundColor,
-              color: toastColor,
-            });
           } else {
-            throw new Error("Ungültiges Format.");
+            errorOccurred = true;
+            errorMessage =
+              "Die Historie konnte nicht geladen werden. Bitte überprüfen Sie die Datei.";
           }
+          if (imported.archive) {
+            localStorage.setItem("archive", JSON.stringify(imported.archive));
+            displayArchive();
+          } else {
+            errorOccurred = true;
+            errorMessage +=
+              "Das Archiv konnte nicht geladen werden. Bitte überprüfen Sie die Datei.";
+          }
+
+          Swal.fire({
+            title: "Import erfolgreich!",
+            text: errorMessage,
+            icon: "success",
+            background: toastBackgroundColor,
+            color: toastColor,
+          });
         } catch (error) {
           Swal.fire({
             title: "Fehler!",
@@ -648,6 +666,152 @@ document.getElementById("importHistoryButton").addEventListener("click", () => {
   // Der Button löst die Datei-Auswahl aus
   document.getElementById("importHistoryFile").click();
 });
+
+// Archiving
+function archiveData() {
+  // Hole die aktuellen Daten (Balance und History)
+  const archivedData = {
+    balance: balance,
+    history: history,
+  };
+
+  // Hole das existierende Archiv aus dem Local Storage, falls vorhanden
+  let archive = JSON.parse(localStorage.getItem("archive")) || [];
+
+  // Füge die neuen archivierten Daten hinzu
+  archive.push({
+    timestamp: generateTimestamp(),
+    data: archivedData,
+  });
+
+  // Speichere das Archiv zurück im Local Storage
+  localStorage.setItem("archive", JSON.stringify(archive));
+
+  displayArchive(); // Aktualisiere die Anzeige des Archivs
+
+  // Benachrichtige den Benutzer
+  Swal.fire({
+    title: "Archiviert!",
+    text: "Die aktuellen Daten wurden archiviert.",
+    icon: "success",
+    toast: true,
+    position: "bottom",
+    background: toastBackgroundColor,
+    color: toastColor,
+  });
+}
+function loadArchivedData(timestamp) {
+  // Lade das Archiv aus dem Local Storage
+  let archive = JSON.parse(localStorage.getItem("archive")) || [];
+
+  // Finde das archivierte Set basierend auf dem Zeitstempel
+  const archivedData = archive.find((item) => item.timestamp === timestamp);
+
+  if (archivedData) {
+    if (history.length > 1) {
+      archiveData();
+    }
+    // Lade die archivierten Daten in die Variablen
+    balance = archivedData.data.balance;
+    history = archivedData.data.history;
+
+    // Aktualisiere den Graphen und die Balance
+    updateBalance(balance);
+    updateChart();
+    updateSelectedAmount(tempAmount);
+
+    Swal.fire({
+      title: "Archiv geladen!",
+      text: `Die Daten vom ${timestamp} wurden geladen.`,
+      icon: "success",
+      toast: true,
+      position: "bottom",
+      background: toastBackgroundColor,
+      color: toastColor,
+    });
+  } else {
+    Swal.fire({
+      title: "Fehler!",
+      text: "Das Archiv mit diesem Zeitstempel wurde nicht gefunden.",
+      icon: "error",
+      toast: true,
+      position: "bottom",
+      background: toastBackgroundColor,
+      color: toastColor,
+    });
+  }
+}
+function displayArchive() {
+  let archive = JSON.parse(localStorage.getItem("archive")) || [];
+  let archiveList = document.getElementById("archiveList");
+  archiveList.innerHTML = "";
+
+  if (archive.length === 0) {
+    archiveList.innerHTML = "<li>Keine archivierten Daten vorhanden</li>";
+  } else {
+    archive.forEach((item) => {
+      const listItem = document.createElement("li");
+
+      const timestampText = document.createElement("span");
+      timestampText.textContent = item.timestamp;
+      timestampText.style.marginRight = "10px";
+
+      const loadButton = document.createElement("button");
+      loadButton.textContent = "Laden";
+      loadButton.classList.add("buttonSmol");
+      loadButton.style.marginRight = "5px";
+      loadButton.addEventListener("click", () => {
+        loadArchivedData(item.timestamp);
+      });
+
+      const deleteButton = document.createElement("button");
+      deleteButton.textContent = "Löschen";
+      deleteButton.classList.add("buttonSmol");
+      deleteButton.addEventListener("click", () => {
+        deleteArchivedData(item.timestamp);
+      });
+
+      listItem.appendChild(timestampText);
+      listItem.appendChild(loadButton);
+      listItem.appendChild(deleteButton);
+
+      archiveList.appendChild(listItem);
+    });
+  }
+}
+
+function deleteArchivedData(timestamp) {
+  let archive = JSON.parse(localStorage.getItem("archive")) || [];
+
+  // Filtere den Eintrag mit dem passenden Zeitstempel heraus
+  const updatedArchive = archive.filter((item) => item.timestamp !== timestamp);
+
+  // Speichere die gefilterte Liste zurück
+  localStorage.setItem("archive", JSON.stringify(updatedArchive));
+
+  // Liste neu anzeigen
+  displayArchive();
+
+  Swal.fire({
+    title: "Gelöscht!",
+    text: `Archiv vom ${timestamp} wurde entfernt.`,
+    icon: "success",
+    toast: true,
+    position: "bottom",
+    background: toastBackgroundColor,
+    color: toastColor,
+  });
+}
+
+// Archivieren Button Event Listener
+document.getElementById("archiveButton").addEventListener("click", () => {
+  archiveData();
+});
+
+// Archiv-Liste beim Laden der Seite anzeigen
+window.onload = function () {
+  displayArchive();
+};
 
 window.adjustAmount = adjustAmount;
 window.reset = reset;

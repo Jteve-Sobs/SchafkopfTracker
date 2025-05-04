@@ -171,3 +171,8 @@ input:invalid + .clear-btn {
   border-radius: 5px;
   cursor: pointer;
 }
+#archiveList {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
