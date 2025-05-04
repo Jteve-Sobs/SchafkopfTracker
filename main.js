@@ -81,6 +81,10 @@ var schneiderfreiButton = document.getElementById("Schneiderfrei");
 var schneiderButton = document.getElementById("Schneider");
 var schwarzButton = document.getElementById("Schwarz");
 var toutButton = document.getElementById("Tout");
+var currentlySelectedGame =
+  gameModes[
+    document.querySelector(".selectorButtons").querySelector(".active")?.id
+  ]?.id;
 
 function activateButtonsForGameModes(gameMode) {
   switch (gameMode) {
@@ -166,11 +170,11 @@ function adjustAmount(sign) {
 }
 
 function updateAmount() {
-  activateButtonsForGameModes(
+  currentlySelectedGame =
     gameModes[
       document.querySelector(".selectorButtons").querySelector(".active")?.id
-    ]
-  );
+    ]?.id;
+  activateButtonsForGameModes(currentlySelectedGame);
 
   // Spielarten mit ihren Grundbeträgen
   const gameValues = {
@@ -372,7 +376,7 @@ function reset() {
   if (history.length <= 1) {
     return;
   }
-
+  var timerInterval;
   Swal.fire({
     title: "Wollen Sie wirklich alle Runden löschen?",
     text: "Dies kann nicht mehr rückgängig gemacht werden!",
@@ -411,7 +415,7 @@ function reset() {
       // Functionality here
       tempAmount = 0;
       balance = 0;
-      history = [0];
+      history = [{ amount: 0, game: "Start", teammates: [] }];
       updateLocalStorage();
       updateBalance(balance);
       updateChart();
@@ -431,6 +435,7 @@ function deleteLastRound() {
     return;
   }
 
+  var timerInterval;
   Swal.fire({
     title: "Wollen Sie die letzte Runde wirklich löschen?",
     text: "Dies kann nicht mehr rückgängig gemacht werden!",
@@ -469,7 +474,7 @@ function deleteLastRound() {
       // Functionality here
       history.pop();
       if (history.length > 1) {
-        balance = history[history.length - 1];
+        balance = history[history.length - 1].amount;
       } else {
         balance = 0;
       }
@@ -504,7 +509,7 @@ function confirmTransaction(type = "plus") {
   balance = Math.round(balance * 100) / 100;
   let tempItem = {
     amount: balance,
-    game: "-",
+    game: currentlySelectedGame,
     teammates: [],
   };
   history.push(tempItem);
