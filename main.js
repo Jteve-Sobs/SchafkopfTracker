@@ -408,9 +408,9 @@ function reset() {
         didOpen: () => {
           // Swal.showLoading();
           const timer = Swal.getPopup().querySelector("b");
-          timerInterval = setInterval(() => {
-            timer.textContent = `${Swal.getTimerLeft()}`;
-          }, 100);
+          // timerInterval = setInterval(() => {
+          //   timer.textContent = `${Swal.getTimerLeft()}`;
+          // }, 100);
         },
         willClose: () => {
           clearInterval(timerInterval);
@@ -638,12 +638,24 @@ document
               "Das Archiv konnte nicht geladen werden. Bitte überprüfen Sie die Datei.";
           }
 
+          var timerInterval;
           Swal.fire({
             title: "Import erfolgreich!",
             text: errorMessage,
             icon: "success",
             background: toastBackgroundColor,
             color: toastColor,
+            timer: 1200,
+            didOpen: () => {
+              // Swal.showLoading();
+              const timer = Swal.getPopup().querySelector("b");
+              timerInterval = setInterval(() => {
+                timer.textContent = `${Swal.getTimerLeft()}`;
+              }, 100);
+            },
+            willClose: () => {
+              clearInterval(timerInterval);
+            },
           });
         } catch (error) {
           Swal.fire({
@@ -690,6 +702,7 @@ function archiveData() {
   displayArchive(); // Aktualisiere die Anzeige des Archivs
 
   // Benachrichtige den Benutzer
+  var timerInterval;
   Swal.fire({
     title: "Archiviert!",
     text: "Die aktuellen Daten wurden archiviert.",
@@ -698,6 +711,17 @@ function archiveData() {
     position: "bottom",
     background: toastBackgroundColor,
     color: toastColor,
+    timer: 1200,
+    didOpen: () => {
+      // Swal.showLoading();
+      const timer = Swal.getPopup().querySelector("b");
+      // timerInterval = setInterval(() => {
+      //   timer.textContent = `${Swal.getTimerLeft()}`;
+      // }, 100);
+    },
+    willClose: () => {
+      clearInterval(timerInterval);
+    },
   });
 }
 function loadArchivedData(timestamp) {
@@ -720,6 +744,7 @@ function loadArchivedData(timestamp) {
     updateChart();
     updateSelectedAmount(tempAmount);
 
+    var timerInterval;
     Swal.fire({
       title: "Archiv geladen!",
       text: `Die Daten vom ${timestamp} wurden geladen.`,
@@ -728,6 +753,17 @@ function loadArchivedData(timestamp) {
       position: "bottom",
       background: toastBackgroundColor,
       color: toastColor,
+      timer: 1200,
+      didOpen: () => {
+        // Swal.showLoading();
+        const timer = Swal.getPopup().querySelector("b");
+        timerInterval = setInterval(() => {
+          timer.textContent = `${Swal.getTimerLeft()}`;
+        }, 100);
+      },
+      willClose: () => {
+        clearInterval(timerInterval);
+      },
     });
   } else {
     Swal.fire({
@@ -792,6 +828,7 @@ function deleteArchivedData(timestamp) {
   // Liste neu anzeigen
   displayArchive();
 
+  var timerInterval;
   Swal.fire({
     title: "Gelöscht!",
     text: `Archiv vom ${timestamp} wurde entfernt.`,
@@ -800,6 +837,17 @@ function deleteArchivedData(timestamp) {
     position: "bottom",
     background: toastBackgroundColor,
     color: toastColor,
+    timer: 1200,
+    didOpen: () => {
+      // Swal.showLoading();
+      const timer = Swal.getPopup().querySelector("b");
+      timerInterval = setInterval(() => {
+        timer.textContent = `${Swal.getTimerLeft()}`;
+      }, 100);
+    },
+    willClose: () => {
+      clearInterval(timerInterval);
+    },
   });
 }
 
