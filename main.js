@@ -740,6 +740,7 @@ function loadArchivedData(timestamp) {
     history = archivedData.data.history;
 
     // Aktualisiere den Graphen und die Balance
+    updateLocalStorage();
     updateBalance(balance);
     updateChart();
     updateSelectedAmount(tempAmount);
