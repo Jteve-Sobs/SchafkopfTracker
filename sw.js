@@ -18,6 +18,7 @@ const urlsToCache = [
   "init.js",
   "main.js",
   "chart.js",
+  "sweetalert.js",
   "version.js",
   "version.json",
   "resources/stonks.png",
