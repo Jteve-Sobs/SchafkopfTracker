@@ -96,7 +96,7 @@ function activateButtonsForGameModes(gameMode) {
       schneiderButton.disabled = true;
       schwarzButton.disabled = true;
       toutButton.disabled = true;
-      // Set option to schneiderfrei
+      // Unset all options
       schneiderfreiButton.classList.remove("active");
       schneiderButton.classList.remove("active");
       schwarzButton.classList.remove("active");
@@ -135,7 +135,7 @@ function activateButtonsForGameModes(gameMode) {
       schneiderButton.disabled = true;
       schwarzButton.disabled = true;
       toutButton.disabled = true;
-      // Set option to schneiderfrei
+      // Unset all options
       schneiderfreiButton.classList.remove("active");
       schneiderButton.classList.remove("active");
       schwarzButton.classList.remove("active");
@@ -860,6 +860,104 @@ document.getElementById("archiveButton").addEventListener("click", () => {
 // Archiv-Liste beim Laden der Seite anzeigen
 window.onload = function () {
   displayArchive();
+};
+
+// Statsistiken
+function renderStatistics() {
+  //todo: Start muss immer weg
+  const currentStatsDiv = document.getElementById("currentStats");
+  const archiveStatsDiv = document.getElementById("archiveStats");
+
+  var data = {
+    current: history,
+    archive: JSON.parse(localStorage.getItem("archive") || "[]"),
+  };
+
+  const currentBalance = data.current[data.current.length - 1].amount;
+  const currentGames = data.current.length - 1; // minus 1 for the initial entry
+  const spieler = data.current.filter((n) => n.game.includes("Spieler")).length;
+  const mitspieler = data.current.filter((n) =>
+    n.game.includes("Nichtspieler")
+  ).length;
+  const sauspiele = data.current.filter((n) =>
+    n.game.includes("Sauspiel")
+  ).length;
+  const geierWenz = data.current.filter((n) =>
+    n.game.includes("Geier/Wenz")
+  ).length;
+  const solo = data.current.filter((n) => n.game.includes("Solo")).length;
+  const sie = data.current.filter((n) => n.game.includes("Sie")).length;
+  const schneiderfrei = data.current.filter((n) =>
+    n.game.includes("Schneiderfrei")
+  ).length;
+  const schneider = data.current.filter(
+    (n) => n.game.includes("Schneider") && !n.game.includes("Schneiderfrei")
+  ).length;
+  const schwarz = data.current.filter((n) => n.game.includes("Schwarz")).length;
+  const tout = data.current.filter((n) => n.game.includes("Tout")).length;
+  const ramsch = data.current.filter((n) => n.game.includes("Ramsch")).length;
+  //todo: format percentage to 2 decimal places
+  currentStatsDiv.innerHTML = `<h2>Aktueller Stand</h2>
+        <pre>Letzter Betrag: ${formatCurrency(currentBalance)}
+Anzahl Spiele: ${currentGames}
+Gewonnen (noch nicht ganz korrekt): ${
+    data.current.filter((n) => n.amount > 0).length
+  }
+Spieler: ${spieler} (${(spieler / currentGames) * 100}%)
+Nichtspieler: ${mitspieler} (${(mitspieler / currentGames) * 100}%)
+
+Sauspiele: ${sauspiele} (${(sauspiele / currentGames) * 100}%)
+Geier/Wenz: ${geierWenz} (${(geierWenz / currentGames) * 100}%)
+Solo: ${solo} (${(solo / currentGames) * 100}%)
+Sie: ${sie} (${(sie / currentGames) * 100}%)
+
+Schneiderfrei: ${schneiderfrei} (${(schneiderfrei / currentGames) * 100}%)
+Schneider: ${schneider} (${(schneider / currentGames) * 100}%)
+Schwartz: ${schwarz} (${(schwarz / currentGames) * 100}%)
+Tout: ${tout} (${(tout / currentGames) * 100}%)
+</pre>`;
+
+  let archiveHTML = "<h2>Archiv</h2>";
+  let previousBalance = 0;
+  data.archive.forEach((entry) => {
+    const balance = entry.data.balance;
+    const diff = balance - previousBalance;
+    archiveHTML += `<pre>
+Zeit: ${entry.timestamp}
+Balance: ${formatCurrency(balance)}
+Differenz zum Vorherigen: ${formatCurrency(diff >= 0 ? "+" + diff : diff)}
+Spiele: ${entry.data.history.length}
+Gewonnen (noch nicht ganz korrekt): ${
+      entry.data.history.filter((n) => n.amount > 0).length
+    }
+Spieler: ${entry.data.history.filter((n) => n.game.includes("Spieler")).length}
+Nichtspieler: ${
+      entry.data.history.filter((n) => n.game.includes("Nichtspieler")).length
+    }</pre>`;
+    previousBalance = balance;
+  });
+
+  archiveStatsDiv.innerHTML = archiveHTML;
+}
+
+// Modal logic
+const modal = document.getElementById("statsModal");
+const btn = document.getElementById("showStatsBtn");
+const span = document.getElementById("closeModal");
+
+btn.onclick = function () {
+  renderStatistics();
+  modal.style.display = "block";
+};
+
+span.onclick = function () {
+  modal.style.display = "none";
+};
+
+window.onclick = function (event) {
+  if (event.target === modal) {
+    modal.style.display = "none";
+  }
 };
 
 window.adjustAmount = adjustAmount;
