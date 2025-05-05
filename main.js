@@ -873,36 +873,45 @@ function renderStatistics() {
     archive: JSON.parse(localStorage.getItem("archive") || "[]"),
   };
 
-  const currentBalance = data.current[data.current.length - 1].amount;
-  const currentGames = data.current.length - 1; // minus 1 for the initial entry
-  const spieler = data.current.filter((n) => n.game.includes("Spieler")).length;
-  const mitspieler = data.current.filter((n) =>
-    n.game.includes("Nichtspieler")
-  ).length;
-  const sauspiele = data.current.filter((n) =>
-    n.game.includes("Sauspiel")
-  ).length;
-  const geierWenz = data.current.filter((n) =>
-    n.game.includes("Geier/Wenz")
-  ).length;
-  const solo = data.current.filter((n) => n.game.includes("Solo")).length;
-  const sie = data.current.filter((n) => n.game.includes("Sie")).length;
-  const schneiderfrei = data.current.filter((n) =>
-    n.game.includes("Schneiderfrei")
-  ).length;
-  const schneider = data.current.filter(
-    (n) => n.game.includes("Schneider") && !n.game.includes("Schneiderfrei")
-  ).length;
-  const schwarz = data.current.filter((n) => n.game.includes("Schwarz")).length;
-  const tout = data.current.filter((n) => n.game.includes("Tout")).length;
-  const ramsch = data.current.filter((n) => n.game.includes("Ramsch")).length;
-  //todo: format percentage to 2 decimal places
-  currentStatsDiv.innerHTML = `<h2>Aktueller Stand</h2>
-        <pre>Letzter Betrag: ${formatCurrency(currentBalance)}
+  currentStatsDiv.innerHTML = "<h2>Aktueller Stand</h2>";
+  if (data.current.length <= 1) {
+    currentStatsDiv.innerHTML += "<p>Keine Daten vorhanden</p>";
+  } else {
+    const currentBalance = data.current[data.current.length - 1].amount;
+    const currentGames = data.current.length - 1; // minus 1 for the initial entry
+    const spieler = data.current.filter((n) =>
+      n.game.includes("Spieler")
+    ).length;
+    const mitspieler = data.current.filter((n) =>
+      n.game.includes("Nichtspieler")
+    ).length;
+    const sauspiele = data.current.filter((n) =>
+      n.game.includes("Sauspiel")
+    ).length;
+    const geierWenz = data.current.filter((n) =>
+      n.game.includes("Geier/Wenz")
+    ).length;
+    const solo = data.current.filter((n) => n.game.includes("Solo")).length;
+    const sie = data.current.filter((n) => n.game.includes("Sie")).length;
+    const schneiderfrei = data.current.filter((n) =>
+      n.game.includes("Schneiderfrei")
+    ).length;
+    const schneider = data.current.filter(
+      (n) => n.game.includes("Schneider") && !n.game.includes("Schneiderfrei")
+    ).length;
+    const schwarz = data.current.filter((n) =>
+      n.game.includes("Schwarz")
+    ).length;
+    const tout = data.current.filter((n) => n.game.includes("Tout")).length;
+    const ramsch = data.current.filter((n) => n.game.includes("Ramsch")).length;
+    //todo: format percentage to 2 decimal places
+    currentStatsDiv.innerHTML += `<pre>Letzter Betrag: ${formatCurrency(
+      currentBalance
+    )}
 Anzahl Spiele: ${currentGames}
 Gewonnen (noch nicht ganz korrekt): ${
-    data.current.filter((n) => n.amount > 0).length
-  }
+      data.current.filter((n) => n.amount > 0).length
+    }
 Spieler: ${spieler} (${(spieler / currentGames) * 100}%)
 Nichtspieler: ${mitspieler} (${(mitspieler / currentGames) * 100}%)
 
@@ -916,6 +925,7 @@ Schneider: ${schneider} (${(schneider / currentGames) * 100}%)
 Schwartz: ${schwarz} (${(schwarz / currentGames) * 100}%)
 Tout: ${tout} (${(tout / currentGames) * 100}%)
 </pre>`;
+  }
 
   let archiveHTML = "<h2>Archiv</h2>";
   let previousBalance = 0;
