@@ -898,11 +898,10 @@ function renderStatistics() {
   allStatsDiv.innerHTML =
     "<h2>Gesamte Statistik</h2>" + archiveContent(allEntries);
 
-  //todo: gesamte Statistik über alle Spiele hinzufügen
-
   let archiveHTML = "<h2>Archiv</h2>";
   let previousBalance = 0;
   data.archive.forEach((entry) => {
+    archiveHTML += entry.timestamp + "<br>";
     archiveHTML += archiveContent(entry.data.history);
     previousBalance = balance;
   });
