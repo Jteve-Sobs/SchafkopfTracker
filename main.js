@@ -820,7 +820,7 @@ function displayArchive() {
 function deleteArchivedData(timestamp) {
   var timerInterval;
   Swal.fire({
-    title: "Wollen Sie das Archiv wirklich löschen?",
+    title: `Wollen Sie das Archiv ${timestamp} wirklich löschen?`,
     text: "Dies kann nicht mehr rückgängig gemacht werden!",
     icon: "warning",
     showCancelButton: true,
