@@ -818,37 +818,54 @@ function displayArchive() {
 }
 
 function deleteArchivedData(timestamp) {
-  let archive = JSON.parse(localStorage.getItem("archive")) || [];
-
-  // Filtere den Eintrag mit dem passenden Zeitstempel heraus
-  const updatedArchive = archive.filter((item) => item.timestamp !== timestamp);
-
-  // Speichere die gefilterte Liste zurück
-  localStorage.setItem("archive", JSON.stringify(updatedArchive));
-
-  // Liste neu anzeigen
-  displayArchive();
-
   var timerInterval;
   Swal.fire({
-    title: "Gelöscht!",
-    text: `Archiv vom ${timestamp} wurde entfernt.`,
-    icon: "success",
-    toast: true,
-    position: "bottom",
+    title: "Wollen Sie das Archiv wirklich löschen?",
+    text: "Dies kann nicht mehr rückgängig gemacht werden!",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#3085d6",
+    cancelButtonColor: "#d33",
+    confirmButtonText: "Ja, löschen!",
+    cancelButtonText: "Abbrechen",
     background: toastBackgroundColor,
     color: toastColor,
-    timer: 1200,
-    didOpen: () => {
-      // Swal.showLoading();
-      const timer = Swal.getPopup().querySelector("b");
-      timerInterval = setInterval(() => {
-        timer.textContent = `${Swal.getTimerLeft()}`;
-      }, 100);
-    },
-    willClose: () => {
-      clearInterval(timerInterval);
-    },
+  }).then((result) => {
+    if (result.isConfirmed) {
+      let archive = JSON.parse(localStorage.getItem("archive")) || [];
+
+      // Filtere den Eintrag mit dem passenden Zeitstempel heraus
+      const updatedArchive = archive.filter(
+        (item) => item.timestamp !== timestamp
+      );
+
+      // Speichere die gefilterte Liste zurück
+      localStorage.setItem("archive", JSON.stringify(updatedArchive));
+
+      // Liste neu anzeigen
+      displayArchive();
+
+      Swal.fire({
+        title: "Gelöscht!",
+        text: `Archiv vom ${timestamp} wurde entfernt.`,
+        icon: "success",
+        toast: true,
+        position: "bottom",
+        background: toastBackgroundColor,
+        color: toastColor,
+        timer: 1200,
+        didOpen: () => {
+          // Swal.showLoading();
+          const timer = Swal.getPopup().querySelector("b");
+          timerInterval = setInterval(() => {
+            timer.textContent = `${Swal.getTimerLeft()}`;
+          }, 100);
+        },
+        willClose: () => {
+          clearInterval(timerInterval);
+        },
+      });
+    }
   });
 }
 
