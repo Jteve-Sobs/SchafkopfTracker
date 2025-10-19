@@ -1,6 +1,10 @@
 import { formatCurrency } from "./input.js";
 
 export function updateChart() {
+  if (!chart) {
+    return;
+  }
+
   chart.data.labels = window.App.history.map((_, i) => `Runde ${i}`);
   chart.data.labels[0] = "Start";
   chart.data.datasets[0].data = window.App.history.map((x) => x.amount);
