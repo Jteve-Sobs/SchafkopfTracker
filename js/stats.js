@@ -48,7 +48,8 @@ function archiveContent(data) {
       n.game.includes("Nichtspieler")
     ).length;
     const sauspiele = data.filter((n) => n.game.includes("Sauspiel")).length;
-    const geierWenz = data.filter((n) => n.game.includes("Geier/Wenz")).length;
+    const geier = data.filter((n) => n.game.includes("Geier")).length;
+    const wenz = data.filter((n) => n.game.includes("Wenz")).length;
     const solo = data.filter((n) => n.game.includes("Solo")).length;
     const sie = data.filter((n) => n.game.includes("Sie")).length;
     const schneiderfrei = data.filter((n) =>
@@ -68,7 +69,8 @@ Nichtspieler: ${mitspieler} (${((mitspieler / currentGames) * 100).toFixed(2)}%)
 
 Ramsch: ${ramsch} (${((ramsch / currentGames) * 100).toFixed(2)}%)
 Sauspiele: ${sauspiele} (${((sauspiele / currentGames) * 100).toFixed(2)}%)
-Geier/Wenz: ${geierWenz} (${((geierWenz / currentGames) * 100).toFixed(2)}%)
+Geier: ${geier} (${((geier / currentGames) * 100).toFixed(2)}%)
+Wenz: ${wenz} (${((wenz / currentGames) * 100).toFixed(2)}%)
 Solo: ${solo} (${((solo / currentGames) * 100).toFixed(2)}%)
 Sie: ${sie} (${((sie / currentGames) * 100).toFixed(2)}%)
 

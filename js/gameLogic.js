@@ -31,14 +31,16 @@ inputField.addEventListener("input", () => {
 const gameModes = {
   Ramsch: "Ramsch",
   Sauspiel: "Sauspiel",
-  GeierWenz: "Geier/Wenz",
+  Geier: "Geier",
+  Wenz: "Wenz",
   Solo: "Solo",
   Sie: "Sie",
 };
 
 var ramschButton = document.getElementById("Ramsch");
 var sauspielButton = document.getElementById("Sauspiel");
-var geierWenzButton = document.getElementById("GeierWenz");
+var geierButton = document.getElementById("Geier");
+var wenzButton = document.getElementById("Wenz");
 var soloButton = document.getElementById("Solo");
 var sieButton = document.getElementById("Sie");
 var schneiderfreiButton = document.getElementById("Schneiderfrei");
@@ -79,7 +81,8 @@ function activateButtonsForGameModes(gameMode) {
         schneiderfreiButton.classList.add("active");
       }
       break;
-    case gameModes.GeierWenz:
+    case gameModes.Geier:
+    case gameModes.Wenz:
       // Activate all valid options
       schneiderfreiButton.disabled = false;
       schneiderButton.disabled = false;
@@ -145,7 +148,8 @@ export function updateAmount() {
   const gameValues = {
     Ramsch: 0.1,
     Sauspiel: 0.2,
-    "Geier/Wenz": 0.3,
+    Geier: 0.3,
+    Wenz: 0.3,
     Solo: 0.4,
     Sie: 6.4,
   };
@@ -180,10 +184,10 @@ export function updateAmount() {
   let multiplier = multipliers[selectedMultiplier] || 1;
   let amount = baseAmount * multiplier;
 
-  // Wenn verloren und ein bestimmtes Spiel, dann nochmal x3
+  // Wenn Spieler und ein Solo Spiel, dann nochmal x3
   if (
     selectedPlayType === "Spieler" &&
-    ["Ramsch", "Geier/Wenz", "Solo", "Sie"].includes(selectedGame)
+    ["Ramsch", "Geier", "Wenz", "Solo", "Sie"].includes(selectedGame)
   ) {
     amount *= 3;
   }

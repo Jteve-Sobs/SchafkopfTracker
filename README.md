@@ -7,7 +7,7 @@ Dieses Projekt ermöglicht das Erfassen von Spielrunden, Berechnung von Gewinnen
 
 - Dark/Light Mode mit lokalem Speicher
 - Eingabefeld für Beträge (+/- 0,10 Buttons, Clear-Funktion)
-- Auswahl von Spielmodi (Ramsch, Sauspiel, Geier/Wenz, Solo, Sie)
+- Auswahl von Spielmodi (Ramsch, Sauspiel, Geier, Wenz, Solo, Sie)
 - Multiplikatoren für Schneider, Schwarz, Tout
 - Berechnung der Bilanz pro Runde
 - Historie der Runden im LocalStorage gespeichert
