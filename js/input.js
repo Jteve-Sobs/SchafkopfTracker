@@ -167,10 +167,10 @@ function confirmTransaction(type = "plus") {
     });
     return;
   }
-  console.log(window.App.balance);
+
   window.App.balance = window.App.balance + currentValue;
   window.App.balance = Math.round(window.App.balance * 100) / 100;
-  console.log(window.App.balance);
+
   var gameDetails = currentlySelectedGame + ", " + currentlySelectedPlayType;
   if (currentlySelectedMultiplier !== undefined) {
     gameDetails += ", " + currentlySelectedMultiplier;

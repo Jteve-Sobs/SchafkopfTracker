@@ -14,14 +14,13 @@ import "./archive.js";
 import "./stats.js";
 
 window.App = window.App || {};
-console.log(window.App);
 
 window.App.tempAmount = 0;
 window.App.balance = parseFloat(localStorage.getItem("balance")) || 0;
 window.App.history = JSON.parse(localStorage.getItem("history")) || [
   { amount: 0, game: "Start", teammates: [] },
 ];
-console.log(window.App);
+
 for (let i = 0; i < window.App.history.length; i++) {
   // Convert from legacy format to new format
   if (typeof window.App.history[i] === "number") {

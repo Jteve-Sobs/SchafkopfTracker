@@ -4,7 +4,7 @@ function renderStatistics() {
   const currentStatsDiv = document.getElementById("currentStats");
   const allStatsDiv = document.getElementById("allStats");
   const archiveStatsDiv = document.getElementById("archiveStats");
-  console.log(window.App.history);
+
   var data = {
     current: window.App.history,
     archive: JSON.parse(localStorage.getItem("archive") || "[]"),
@@ -33,7 +33,6 @@ function renderStatistics() {
 }
 
 function archiveContent(data) {
-  console.log(data);
   if (data.length <= 1) {
     return "<p>Keine Daten vorhanden</p>";
   } else {

@@ -32,10 +32,10 @@ export function updateChart() {
 
   chart.update();
 }
-export let chart;
+let chart;
 export function initChart() {
   const ctx = document.getElementById("chart").getContext("2d");
-  console.log(window.App.history.map((x) => x.amount));
+  // console.log(window.App.history.map((x) => x.amount));
   var borderColor = balance < 0 ? "red" : "green";
   chart = new Chart(ctx, {
     type: "line",
