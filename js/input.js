@@ -80,7 +80,7 @@ function reset() {
 
 function addAmount(amount) {
   window.App.tempAmount += amount;
-  updateSelectedAmount(tempAmount);
+  updateSelectedAmount(window.App.tempAmount);
 }
 
 function deleteLastRound() {
@@ -142,8 +142,8 @@ function deleteLastRound() {
 }
 
 function resetChoice() {
-  tempAmount = 0;
-  updateSelectedAmount(tempAmount);
+  windows.App.tempAmount = 0;
+  updateSelectedAmount(window.App.tempAmount);
 }
 
 function confirmTransaction(type = "plus") {
