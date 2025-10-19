@@ -17,6 +17,15 @@ export function formatCurrency(value) {
   });
 }
 
+export function formatToGermanDateTime(isoString) {
+  const date = new Date(isoString);
+  return date.toLocaleString("de-DE", {
+    dateStyle: "short",
+    timeStyle: "medium",
+    timeZone: "Europe/Berlin",
+  });
+}
+
 export function updateSelectedAmount(tempAmount) {
   if (document.getElementById("selectedAmount") === null) {
     return;
@@ -170,6 +179,7 @@ function confirmTransaction(type = "plus") {
     amount: window.App.balance,
     game: gameDetails,
     teammates: [],
+    time: new Date(),
   };
   window.App.history.push(tempItem);
   updateBalance();

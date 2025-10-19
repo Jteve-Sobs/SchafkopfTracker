@@ -1,4 +1,4 @@
-import { formatCurrency } from "./input.js";
+import { formatCurrency, formatToGermanDateTime } from "./input.js";
 
 export function updateChart() {
   if (!chart) {
@@ -91,7 +91,13 @@ export function initChart() {
                         context.dataset.data[context.dataIndex - 1]
                     ),
                   "Spiel: " + window.App.history[context.dataIndex].game,
-                ];
+                  window.App.history[context.dataIndex].time
+                    ? "Zeit: " +
+                      formatToGermanDateTime(
+                        window.App.history[context.dataIndex].time
+                      )
+                    : "",
+                ].filter(Boolean);
               }
             },
           },
