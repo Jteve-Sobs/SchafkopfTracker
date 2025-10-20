@@ -23,7 +23,7 @@ function renderStatistics() {
   data.archive.forEach((entry) => {
     archiveHTML += entry.timestamp + "<br>";
     archiveHTML += archiveContent(entry.data.history);
-    previousBalance = balance;
+    previousBalance = window.App.balance;
   });
   if (data.archive.length === 0) {
     archiveHTML += "<p>Keine archivierten Daten vorhanden</p>";

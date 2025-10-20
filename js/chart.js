@@ -9,7 +9,7 @@ export function updateChart() {
   chart.data.labels[0] = "Start";
   chart.data.datasets[0].data = window.App.history.map((x) => x.amount);
 
-  var borderColor = balance < 0 ? "red" : "green";
+  var borderColor = window.App.balance < 0 ? "red" : "green";
   chart.data.datasets[0].borderColor = borderColor;
 
   // Dark mode colors in chart
@@ -36,7 +36,7 @@ let chart;
 export function initChart() {
   const ctx = document.getElementById("chart").getContext("2d");
   // console.log(window.App.history.map((x) => x.amount));
-  var borderColor = balance < 0 ? "red" : "green";
+  var borderColor = window.App.balance < 0 ? "red" : "green";
   chart = new Chart(ctx, {
     type: "line",
     data: {
