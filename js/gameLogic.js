@@ -43,6 +43,8 @@ var geierButton = document.getElementById("Geier");
 var wenzButton = document.getElementById("Wenz");
 var soloButton = document.getElementById("Solo");
 var sieButton = document.getElementById("Sie");
+var mitspielerButton = document.getElementById("Mitspieler");
+var spielerButton = document.getElementById("Spieler");
 var schneiderfreiButton = document.getElementById("Schneiderfrei");
 var schneiderButton = document.getElementById("Schneider");
 var schwarzButton = document.getElementById("Schwarz");
@@ -67,6 +69,8 @@ function activateButtonsForGameModes(gameMode) {
       schneiderButton.classList.remove("active");
       schwarzButton.classList.remove("active");
       toutButton.classList.remove("active");
+      // Enable Mitspieler button
+      mitspielerButton.disabled = false;
       break;
     case gameModes.Sauspiel:
       // Activate all valid options
@@ -80,6 +84,8 @@ function activateButtonsForGameModes(gameMode) {
         toutButton.classList.remove("active");
         schneiderfreiButton.classList.add("active");
       }
+      // Enable Mitspieler button
+      mitspielerButton.disabled = false;
       break;
     case gameModes.Geier:
     case gameModes.Wenz:
@@ -88,6 +94,13 @@ function activateButtonsForGameModes(gameMode) {
       schneiderButton.disabled = false;
       schwarzButton.disabled = false;
       toutButton.disabled = false;
+      // Disable Mitspieler button
+      mitspielerButton.disabled = true;
+      // Set option to Spieler if Mitspieler is active
+      if (mitspielerButton.classList.contains("active")) {
+        mitspielerButton.classList.remove("active");
+        spielerButton.classList.add("active");
+      }
       break;
     case gameModes.Solo:
       // Activate all valid options
@@ -95,6 +108,13 @@ function activateButtonsForGameModes(gameMode) {
       schneiderButton.disabled = false;
       schwarzButton.disabled = false;
       toutButton.disabled = false;
+      // Disable Mitspieler button
+      mitspielerButton.disabled = true;
+      // Set option to Spieler if Mitspieler is active
+      if (mitspielerButton.classList.contains("active")) {
+        mitspielerButton.classList.remove("active");
+        spielerButton.classList.add("active");
+      }
       break;
     case gameModes.Sie:
       // Deactivate all invalid options
@@ -107,6 +127,13 @@ function activateButtonsForGameModes(gameMode) {
       schneiderButton.classList.remove("active");
       schwarzButton.classList.remove("active");
       toutButton.classList.remove("active");
+      // Disable Mitspieler button
+      mitspielerButton.disabled = true;
+      // Set option to Spieler if Mitspieler is active
+      if (mitspielerButton.classList.contains("active")) {
+        mitspielerButton.classList.remove("active");
+        spielerButton.classList.add("active");
+      }
       break;
     default:
       console.log("Invalid game mode selected.", gameMode);

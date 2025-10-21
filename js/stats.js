@@ -43,7 +43,8 @@ function archiveContent(data) {
       return entry.amount > arr[index - 1].amount;
     }).length;
     const spieler = data.filter((n) => n.game.includes("Spieler")).length;
-    const mitspieler = data.filter((n) =>
+    const mitspieler = data.filter((n) => n.game.includes("Mitspieler")).length;
+    const nichtspieler = data.filter((n) =>
       n.game.includes("Nichtspieler")
     ).length;
     const sauspiele = data.filter((n) => n.game.includes("Sauspiel")).length;
@@ -64,7 +65,10 @@ function archiveContent(data) {
 Anzahl Spiele: ${currentGames}
 Gewonnen: ${gewonnen} (${((gewonnen / currentGames) * 100).toFixed(2)}%)
 Spieler: ${spieler} (${((spieler / currentGames) * 100).toFixed(2)}%)
-Nichtspieler: ${mitspieler} (${((mitspieler / currentGames) * 100).toFixed(2)}%)
+Mitspieler: ${mitspieler} (${((mitspieler / currentGames) * 100).toFixed(2)}%)
+Nichtspieler: ${nichtspieler} (${((nichtspieler / currentGames) * 100).toFixed(
+      2
+    )}%)
 
 Ramsch: ${ramsch} (${((ramsch / currentGames) * 100).toFixed(2)}%)
 Sauspiele: ${sauspiele} (${((sauspiele / currentGames) * 100).toFixed(2)}%)
