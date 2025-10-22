@@ -12,6 +12,7 @@ import "./storage.js";
 import "./chart.js";
 import "./archive.js";
 import "./stats.js";
+import { updateLocalStorage } from "./input.js";
 
 window.App = window.App || {};
 
@@ -30,6 +31,22 @@ for (let i = 0; i < window.App.history.length; i++) {
       teammates: [],
     };
   }
+}
+
+// Upgrade history and archive if older historyVersion
+const historyVersion = localStorage.getItem("historyVersion");
+if (historyVersion === null) {
+  const diffHistory = window.App.history.map((entry, i) => {
+    if (i === 0) return { ...entry, amount: entry.amount }; // start value is 0
+    const diff = entry.amount - window.App.history[i - 1].amount;
+    return { ...entry, amount: diff };
+  });
+  window.App.history = diffHistory;
+
+  //todo: update all archives
+
+  localStorage.setItem("historyVersion", 2);
+  updateLocalStorage();
 }
 
 initChart();

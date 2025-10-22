@@ -1,13 +1,27 @@
 import { formatCurrency, formatToGermanDateTime } from "./input.js";
 
+// Add up each cumulative value
+function getChartData() {
+  const data = window.App.history
+    .map((x) => x.amount)
+    .reduce((acc, val) => {
+      const last = acc.length > 0 ? acc[acc.length - 1] : 0;
+      acc.push(parseFloat((last + val).toFixed(2)));
+      return acc;
+    }, []);
+  return data;
+}
+
 export function updateChart() {
   if (!chart) {
     return;
   }
 
+  const data = getChartData();
+
   chart.data.labels = window.App.history.map((_, i) => `Runde ${i}`);
   chart.data.labels[0] = "Start";
-  chart.data.datasets[0].data = window.App.history.map((x) => x.amount);
+  chart.data.datasets[0].data = data;
 
   var borderColor = window.App.balance < 0 ? "red" : "green";
   chart.data.datasets[0].borderColor = borderColor;
@@ -37,6 +51,9 @@ export function initChart() {
   const ctx = document.getElementById("chart").getContext("2d");
   // console.log(window.App.history.map((x) => x.amount));
   var borderColor = window.App.balance < 0 ? "red" : "green";
+
+  const data = getChartData();
+
   chart = new Chart(ctx, {
     type: "line",
     data: {
@@ -44,7 +61,7 @@ export function initChart() {
       datasets: [
         {
           label: "Bilanz",
-          data: window.App.history.map((x) => x.amount),
+          data: data,
           borderColor: borderColor,
           fill: false,
           pointhoverradius: 10,

@@ -17,6 +17,7 @@ export function generateTimestamp() {
 }
 function exportHistory() {
   const data = {
+    historyVersion: 2,
     current: window.App.history,
     archive: JSON.parse(localStorage.getItem("archive") || "{}"),
   };
@@ -43,6 +44,10 @@ document
 
           var errorOccurred = false;
           var errorMessage = "";
+
+          if (imported.historyVersion) {
+          }
+
           if (imported.current && Array.isArray(imported.current)) {
             localStorage.setItem("history", imported.current);
             window.App.history = imported.current;

@@ -176,7 +176,7 @@ function confirmTransaction(type = "plus") {
     gameDetails += ", " + currentlySelectedMultiplier;
   }
   let tempItem = {
-    amount: window.App.balance,
+    amount: currentValue,
     game: gameDetails,
     teammates: [],
     time: new Date(),
