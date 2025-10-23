@@ -45,7 +45,8 @@ document
           var errorOccurred = false;
           var errorMessage = "";
 
-          if (imported.historyVersion) {
+          if (!imported.historyVersion) {
+            localStorage.removeItem("historyVersion");
           }
 
           if (imported.current && Array.isArray(imported.current)) {
@@ -87,6 +88,7 @@ document
             },
             willClose: () => {
               clearInterval(timerInterval);
+              location.reload();
             },
           });
         } catch (error) {

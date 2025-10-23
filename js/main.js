@@ -43,7 +43,28 @@ if (historyVersion === null) {
   });
   window.App.history = diffHistory;
 
-  //todo: update all archives
+  // Upgrade all archives
+  const archive = JSON.parse(localStorage.getItem("archive"));
+  if (archive !== null) {
+    const testArchive = archive.map((archiveEntry) => {
+      const history = archiveEntry.data.history;
+
+      const diffHistory = history.map((entry, i) => {
+        if (i === 0) return { ...entry, amount: entry.amount }; // start value is 0
+        const diff = entry.amount - history[i - 1].amount;
+        return { ...entry, amount: diff };
+      });
+
+      return {
+        ...archiveEntry,
+        data: {
+          ...archiveEntry.data,
+          history: diffHistory,
+        },
+      };
+    });
+    localStorage.setItem("archive", JSON.stringify(testArchive));
+  }
 
   localStorage.setItem("historyVersion", 2);
   updateLocalStorage();
