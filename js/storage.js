@@ -45,6 +45,7 @@ document
           var errorOccurred = false;
           var errorMessage = "";
 
+          // If no version of history is in the imported file, then remove it from local storage to enable upgrade
           if (!imported.historyVersion) {
             localStorage.removeItem("historyVersion");
           }
@@ -88,7 +89,10 @@ document
             },
             willClose: () => {
               clearInterval(timerInterval);
-              location.reload();
+              // Trigger upgrades of archive and history in main.js
+              if (!imported.historyVersion) {
+                location.reload();
+              }
             },
           });
         } catch (error) {
