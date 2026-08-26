@@ -215,16 +215,55 @@ input:invalid + .clear-btn {
 .close:hover {
   color: black;
 }
-pre {
-  background: #f9f9f9;
-  padding: 10px;
-  border-radius: 6px;
-}
-.dark pre {
-  background: #1e1e1e;
-  padding: 10px;
-  border-radius: 6px;
-}
 h2 {
   margin-top: 25px;
+}
+.statsTable {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 8px 0;
+  font-size: 14px;
+}
+.statsTable th,
+.statsTable td {
+  padding: 4px 8px;
+  border-bottom: 1px solid #ddd;
+  text-align: right;
+}
+.statsTable th:first-child,
+.statsTable td:first-child {
+  text-align: left;
+}
+.dark .statsTable th,
+.dark .statsTable td {
+  border-bottom: 1px solid #444;
+}
+.statsGroupHeader td {
+  text-align: left;
+  font-weight: bold;
+  background: #eee;
+  padding-top: 8px;
+}
+.dark .statsGroupHeader td {
+  background: #2a2a2a;
+}
+.metricsTable td:last-child {
+  text-align: left;
+}
+.statsSummary {
+  font-size: 15px;
+  margin: 10px 0;
+}
+.archiveEntry {
+  margin: 8px 0;
+  text-align: left;
+}
+.archiveEntry summary {
+  cursor: pointer;
+  padding: 6px 10px;
+  background: #f9f9f9;
+  border-radius: 6px;
+}
+.dark .archiveEntry summary {
+  background: #1e1e1e;
 }
