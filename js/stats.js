@@ -19,11 +19,9 @@ function renderStatistics() {
     "<h2>Gesamte Statistik</h2>" + archiveContent(allEntries);
 
   let archiveHTML = "<h2>Archiv</h2>";
-  let previousBalance = 0;
   data.archive.forEach((entry) => {
     archiveHTML += entry.timestamp + "<br>";
     archiveHTML += archiveContent(entry.data.history);
-    previousBalance = window.App.balance;
   });
   if (data.archive.length === 0) {
     archiveHTML += "<p>Keine archivierten Daten vorhanden</p>";
@@ -36,11 +34,13 @@ function archiveContent(data) {
   if (data.length <= 1) {
     return "<p>Keine Daten vorhanden</p>";
   } else {
-    const currentBalance = data[data.length - 1].amount;
+    // Seit dem Umstieg auf Delta-Historie (historyVersion 2) ist entry.amount
+    // der Gewinn/Verlust der jeweiligen Runde, keine kumulierte Bilanz mehr.
+    const currentBalance = data.reduce((sum, entry) => sum + entry.amount, 0);
     const currentGames = data.length - 1; // minus 1 for the initial entry
-    const gewonnen = data.filter((entry, index, arr) => {
+    const gewonnen = data.filter((entry, index) => {
       if (index === 0) return false; // erstes Element überspringen
-      return entry.amount > arr[index - 1].amount;
+      return entry.amount > 0;
     }).length;
     const spieler = data.filter((n) => n.game.includes("Spieler")).length;
     const mitspieler = data.filter((n) => n.game.includes("Mitspieler")).length;
@@ -61,7 +61,7 @@ function archiveContent(data) {
     const schwarz = data.filter((n) => n.game.includes("Schwarz")).length;
     const tout = data.filter((n) => n.game.includes("Tout")).length;
     const ramsch = data.filter((n) => n.game.includes("Ramsch")).length;
-    return `<pre>Letzter Betrag: ${formatCurrency(currentBalance)}
+    return `<pre>Aktuelle Bilanz: ${formatCurrency(currentBalance)}
 Anzahl Spiele: ${currentGames}
 Gewonnen: ${gewonnen} (${((gewonnen / currentGames) * 100).toFixed(2)}%)
 Spieler: ${spieler} (${((spieler / currentGames) * 100).toFixed(2)}%)

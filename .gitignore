@@ -1,3 +1,7 @@
+# Echte Export-Dateien mit persönlichen Spieldaten (z.B. zum lokalen Testen
+# in test/ abgelegt) - Dateiname enthält Datum/Uhrzeit, siehe generateTimestamp()
+schafkopf_tracker_history_*.json
+
 # Logs
 logs
 *.log

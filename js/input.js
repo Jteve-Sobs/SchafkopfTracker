@@ -151,7 +151,7 @@ function deleteLastRound() {
 }
 
 function resetChoice() {
-  windows.App.tempAmount = 0;
+  window.App.tempAmount = 0;
   updateSelectedAmount(window.App.tempAmount);
 }
 

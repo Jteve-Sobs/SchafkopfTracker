@@ -49,6 +49,7 @@ var schneiderfreiButton = document.getElementById("Schneiderfrei");
 var schneiderButton = document.getElementById("Schneider");
 var schwarzButton = document.getElementById("Schwarz");
 var toutButton = document.getElementById("Tout");
+var ohneGeldButton = document.getElementById("OhneGeld");
 export var currentlySelectedGame =
   gameModes[
     document.querySelector(".selectorButtons").querySelector(".active")?.id
@@ -57,6 +58,19 @@ export var currentlySelectedPlayType;
 export var currentlySelectedMultiplier;
 
 function activateButtonsForGameModes(gameMode) {
+  // "Ohne Geld" (niemand zahlt/bekommt etwas) ist nur bei Ramsch möglich
+  if (gameMode === gameModes.Ramsch) {
+    ohneGeldButton.disabled = false;
+  } else {
+    ohneGeldButton.disabled = true;
+    if (ohneGeldButton.classList.contains("active")) {
+      ohneGeldButton.classList.remove("active");
+      document
+        .querySelector('#resultButtons [data-type="default"]')
+        .classList.add("active");
+    }
+  }
+
   switch (gameMode) {
     case gameModes.Ramsch:
       // Deactivate all invalid options
@@ -211,30 +225,35 @@ export function updateAmount() {
   let multiplier = multipliers[selectedMultiplier] || 1;
   let amount = baseAmount * multiplier;
 
-  // Wenn Spieler und ein Solo Spiel, dann nochmal x3
-  if (
-    selectedPlayType === "Spieler" &&
-    ["Ramsch", "Geier", "Wenz", "Solo", "Sie"].includes(selectedGame)
-  ) {
-    amount *= 3;
-  }
+  // Ramsch ohne Geld: niemand zahlt/bekommt etwas
+  if (selectedResult === "Ohne Geld") {
+    amount = 0;
+  } else {
+    // Wenn Spieler und ein Solo Spiel, dann nochmal x3
+    if (
+      selectedPlayType === "Spieler" &&
+      ["Ramsch", "Geier", "Wenz", "Solo", "Sie"].includes(selectedGame)
+    ) {
+      amount *= 3;
+    }
 
-  // Möglichkeiten bei Ramsch
-  // Durchmarsch/Notspiel Spieler gewinnen: -> 0,30€
-  // Durchmarsch/Notspiel Nichtspieler gewinnen: -> 0,10€
-  // nicht gewinnen oder verlieren -> 0,00€
-  // Ramsch verlieren: -> -0,20€
-  // Notspiel verlieren: -> -0,20€
-  // Durchmarsch/Notspiel Spieler verlieren: -> -0,60€
+    // Möglichkeiten bei Ramsch
+    // Durchmarsch/Notspiel Spieler gewinnen: -> 0,30€
+    // Durchmarsch/Notspiel Nichtspieler gewinnen: -> 0,10€
+    // nicht gewinnen oder verlieren -> 0,00€
+    // Ramsch verlieren: -> -0,20€
+    // Notspiel verlieren: -> -0,20€
+    // Durchmarsch/Notspiel Spieler verlieren: -> -0,60€
 
-  // Ramsch verlieren -> einzahlen von 30cent in die Kasse
-  if (selectedResult === "Verloren" && "Ramsch".includes(selectedGame)) {
-    amount *= 2;
-  }
+    // Ramsch verlieren -> einzahlen von 30cent in die Kasse
+    if (selectedResult === "Verloren" && "Ramsch".includes(selectedGame)) {
+      amount *= 2;
+    }
 
-  // Gewinn oder Verlust berechnen
-  if (selectedResult === "Verloren") {
-    amount *= -1;
+    // Gewinn oder Verlust berechnen
+    if (selectedResult === "Verloren") {
+      amount *= -1;
+    }
   }
 
   // Betrag in das Input-Feld schreiben

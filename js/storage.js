@@ -51,7 +51,6 @@ document
           }
 
           if (imported.current && Array.isArray(imported.current)) {
-            localStorage.setItem("history", imported.current);
             window.App.history = imported.current;
             window.App.balance =
               window.App.history[window.App.history.length - 1].amount;
