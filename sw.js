@@ -1,17 +1,11 @@
-// import { getVersion } from "./version.js";
+// IMPORTANT: bump APP_VERSION on every release, together with version.json.
+// Browsers only detect a service worker update via a byte-level diff of
+// this file. If APP_VERSION (and therefore this file's content) doesn't
+// change, install/activate never re-runs and cached files (stats.js,
+// chart.js, ...) stay stale forever, no matter what the server serves.
+const APP_VERSION = "0.6.8";
+const CACHE_NAME = "my-app-cache-" + APP_VERSION;
 
-async function getVersion() {
-  try {
-    const response = await fetch("/version.json");
-    const data = await response.json();
-    return data.version;
-  } catch (error) {
-    console.error("Failed to fetch version:", error);
-    return "unknown"; // Fallback if fetching fails
-  }
-}
-
-const CACHE_NAME_PREFIX = "my-app-cache-";
 const urlsToCache = [
   "index.html",
   "style.css",
@@ -35,39 +29,36 @@ const urlsToCache = [
 self.addEventListener("install", (event) => {
   event.waitUntil(
     (async () => {
-      const version = await getVersion();
-      const CACHE_NAME = CACHE_NAME_PREFIX + version;
       console.log("Installing service worker with cache name:", CACHE_NAME);
-
       const cache = await caches.open(CACHE_NAME);
       await cache.addAll(urlsToCache);
-
-      // Save the cache name for later use in the activate event
-      self.CACHE_NAME = CACHE_NAME;
     })()
   );
   self.skipWaiting(); // Force immediate activation of the new SW
 });
 
-// Activate Event: Delete Old Caches
+// Activate Event: Delete Old Caches (keep only the current version's cache)
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
+    (async () => {
+      const cacheNames = await caches.keys();
+      await Promise.all(
         cacheNames
-          // .filter((name) => name !== self.CACHE_NAME) // don't delete this line. otherwise, it will not delete the currently used cache. no thanks to ChatGPT
+          .filter((name) => name !== CACHE_NAME)
           .map((name) => caches.delete(name))
       );
-    })
+      await self.clients.claim(); // Force immediate control over all clients
+    })()
   );
-  self.clients.claim(); // Force immediate control over all clients
 });
 
-// Fetch Event: Serve from Cache or Fetch from Network
+// Fetch Event: Serve from the current version's cache, or fetch from network
 self.addEventListener("fetch", (event) => {
   event.respondWith(
-    caches.match(event.request).then((response) => {
-      return response || fetch(event.request);
-    })
+    (async () => {
+      const cache = await caches.open(CACHE_NAME);
+      const cached = await cache.match(event.request);
+      return cached || fetch(event.request);
+    })()
   );
 });
