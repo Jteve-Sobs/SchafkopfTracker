@@ -135,12 +135,11 @@ function deleteLastRound() {
 
       // Functionality here
       window.App.history.pop();
-      if (window.App.history.length > 1) {
-        window.App.balance =
-          window.App.history[window.App.history.length - 1].amount;
-      } else {
-        window.App.balance = 0;
-      }
+      window.App.balance = window.App.history.reduce(
+        (acc, entry) => acc + entry.amount,
+        0
+      );
+      window.App.balance = Math.round(window.App.balance * 100) / 100;
 
       updateBalance();
       updateSelectedAmount(window.App.tempAmount);
