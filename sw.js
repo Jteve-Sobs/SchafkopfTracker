@@ -3,7 +3,7 @@
 // this file. If APP_VERSION (and therefore this file's content) doesn't
 // change, install/activate never re-runs and cached files (stats.js,
 // chart.js, ...) stay stale forever, no matter what the server serves.
-const APP_VERSION = "0.6.8";
+const APP_VERSION = "0.6.9";
 const CACHE_NAME = "my-app-cache-" + APP_VERSION;
 
 const urlsToCache = [
@@ -16,6 +16,7 @@ const urlsToCache = [
   "js/input.js",
   "js/main.js",
   "js/stats.js",
+  "js/statsData.js",
   "js/storage.js",
   "js/theme.js",
   "chart.js",

@@ -17,6 +17,17 @@ export function formatCurrency(value) {
   });
 }
 
+// Für Durchschnitte: mit nur 2 Nachkommastellen sehen z.B. -0,004 € und
+// +0,004 € beide wie 0,00 € aus.
+export function formatCurrencyPrecise(value, digits = 4) {
+  return parseFloat(value).toLocaleString("de-DE", {
+    style: "currency",
+    currency: "EUR",
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits,
+  });
+}
+
 export function formatToGermanDateTime(isoString) {
   const date = new Date(isoString);
   return date.toLocaleString("de-DE", {

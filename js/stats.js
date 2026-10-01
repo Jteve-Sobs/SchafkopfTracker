@@ -1,28 +1,41 @@
-import { formatCurrency } from "./input.js";
+import { formatCurrency, formatCurrencyPrecise } from "./input.js";
+import {
+  ROLES,
+  MULTIPLIERS,
+  filterRounds,
+  summarize,
+  breakdownByGameType,
+} from "./statsData.js";
 
-const GAME_TYPES = [
-  ["Ramsch", "Ramsch"],
-  ["Sauspiel", "Sauspiele"],
-  ["Geier", "Geier"],
-  ["Wenz", "Wenz"],
-  ["Solo", "Solo"],
-  ["Sie", "Sie"],
-];
-const ROLES = ["Spieler", "Mitspieler", "Nichtspieler"];
 const WEEKDAY_ORDER = [1, 2, 3, 4, 5, 6, 0]; // Montag..Sonntag (JS: 0 = Sonntag)
+const CATEGORY_COLUMNS = 5;
 
-// Eine Tabellenzeile mit Vorkommen UND Gewinnquote innerhalb der Kategorie.
-function categoryRow(label, rounds, totalGames) {
-  const count = rounds.length;
-  const occPercent = totalGames ? ((count / totalGames) * 100).toFixed(2) : "0.00";
-  const winPercent = count
-    ? `${((rounds.filter((r) => r.amount > 0).length / count) * 100).toFixed(2)}%`
-    : "–";
-  return `<tr><td>${label}</td><td>${count}</td><td>${occPercent}%</td><td>${winPercent}</td></tr>`;
+const formatPercent = (value) =>
+  value === null ? "–" : `${(value * 100).toFixed(2)}%`;
+
+// Eine Tabellenzeile mit Vorkommen, Gewinnquote und Netto innerhalb der Kategorie.
+function categoryRow(label, rounds, totalGames, extraClass = "") {
+  const s = summarize(rounds);
+  const occPercent = formatPercent(totalGames ? s.count / totalGames : 0);
+  const cls = extraClass ? ` class="${extraClass}"` : "";
+  return `<tr${cls}><td>${label}</td><td>${s.count}</td><td>${occPercent}</td><td>${formatPercent(
+    s.winRate
+  )}</td><td>${s.count ? formatCurrency(s.sum) : "–"}</td></tr>`;
 }
 
 function groupHeaderRow(label) {
-  return `<tr class="statsGroupHeader"><td colspan="4">${label}</td></tr>`;
+  return `<tr class="statsGroupHeader"><td colspan="${CATEGORY_COLUMNS}">${label}</td></tr>`;
+}
+
+// Spielart-Zeile, direkt darunter die Aufteilung nach Rolle.
+function gameTypeRows(group, totalGames) {
+  if (group.rounds.length === 0) {
+    return categoryRow(group.label, group.rounds, totalGames);
+  }
+  return (
+    categoryRow(group.label, group.rounds, totalGames) +
+    group.roles.map((r) => categoryRow(r.label, r.rounds, totalGames, "statsSubRow")).join("")
+  );
 }
 
 function formatRoundRef(entry) {
@@ -82,34 +95,21 @@ function archiveContent(data) {
 
   const categoryRows = [
     groupHeaderRow("Rolle"),
-    ...ROLES.map((role) =>
-      categoryRow(role, rounds.filter((r) => r.game.includes(role)), currentGames)
-    ),
+    ...ROLES.map((role) => categoryRow(role, filterRounds(rounds, { role }), currentGames)),
     groupHeaderRow("Spielart"),
-    ...GAME_TYPES.map(([match, label]) =>
-      categoryRow(label, rounds.filter((r) => r.game.includes(match)), currentGames)
-    ),
+    ...breakdownByGameType(rounds).map((group) => gameTypeRows(group, currentGames)),
     groupHeaderRow("Modifikator"),
-    categoryRow(
-      "Schneiderfrei",
-      rounds.filter((r) => r.game.includes("Schneiderfrei")),
-      currentGames
+    ...MULTIPLIERS.map((multiplier) =>
+      categoryRow(multiplier, filterRounds(rounds, { multiplier }), currentGames)
     ),
-    categoryRow(
-      "Schneider",
-      rounds.filter((r) => r.game.includes("Schneider") && !r.game.includes("Schneiderfrei")),
-      currentGames
-    ),
-    categoryRow("Schwarz", rounds.filter((r) => r.game.includes("Schwarz")), currentGames),
-    categoryRow("Tout", rounds.filter((r) => r.game.includes("Tout")), currentGames),
   ].join("");
 
-  const categoryTable = `<table class="statsTable"><thead><tr><th>Kategorie</th><th>Anzahl</th><th>% aller Runden</th><th>% gewonnen</th></tr></thead><tbody>${categoryRows}</tbody></table>`;
+  const categoryTable = `<div class="statsTableWrapper"><table class="statsTable"><thead><tr><th>Kategorie</th><th>Anzahl</th><th>% aller Runden</th><th>% gewonnen</th><th>Netto</th></tr></thead><tbody>${categoryRows}</tbody></table></div>`;
 
   const metricsRows = [
     ["Beste Runde", formatRoundRef(metrics.best)],
     ["Schlechteste Runde", formatRoundRef(metrics.worst)],
-    ["Ø pro Runde", formatCurrency(metrics.avg)],
+    ["Ø pro Runde", formatCurrencyPrecise(metrics.avg)],
     ["Längste Gewinn-Serie", `${metrics.longestWin} Runde(n)`],
     ["Längste Verlust-Serie", `${metrics.longestLoss} Runde(n)`],
   ]

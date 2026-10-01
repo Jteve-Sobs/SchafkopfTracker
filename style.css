@@ -247,6 +247,19 @@ h2 {
 .dark .statsGroupHeader td {
   background: #2a2a2a;
 }
+.statsTableWrapper {
+  overflow-x: auto;
+}
+.statsSubRow td {
+  font-size: 13px;
+  color: #666;
+}
+.statsSubRow td:first-child {
+  padding-left: 28px;
+}
+.dark .statsSubRow td {
+  color: #aaa;
+}
 .metricsTable td:last-child {
   text-align: left;
 }
