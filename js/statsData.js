@@ -71,11 +71,29 @@ export function breakdownByGameType(rounds) {
       label,
       legacy: Boolean(legacy),
       rounds: ofType,
-      roles: subRoles.map((role) => ({
-        role,
-        label: role || "ohne Rolle",
-        rounds: ofType.filter((r) => parseGame(r.game).role === role),
-      })),
+      roles: subRoles.map((role) => {
+        const ofRole = ofType.filter((r) => parseGame(r.game).role === role);
+        return {
+          role,
+          label: role || "ohne Rolle",
+          rounds: ofRole,
+          multipliers: breakdownByMultiplier(ofRole),
+        };
+      }),
     };
   }).filter((g) => !g.legacy || g.rounds.length > 0);
+}
+
+// Unterteilung einer Rolle nach Schneiderfrei/Schneider/Schwarz/Tout. Nur
+// Modifikatoren, die tatsächlich vorkommen - Ramsch und Sie haben keinen,
+// dort bleibt die Liste leer.
+export function breakdownByMultiplier(rounds) {
+  const present = new Set(rounds.map((r) => parseGame(r.game).multiplier).filter(Boolean));
+  return [...MULTIPLIERS, ...[...present].filter((m) => !MULTIPLIERS.includes(m))]
+    .filter((m) => present.has(m))
+    .map((multiplier) => ({
+      multiplier,
+      label: multiplier,
+      rounds: rounds.filter((r) => parseGame(r.game).multiplier === multiplier),
+    }));
 }

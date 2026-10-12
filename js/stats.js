@@ -27,14 +27,23 @@ function groupHeaderRow(label) {
   return `<tr class="statsGroupHeader"><td colspan="${CATEGORY_COLUMNS}">${label}</td></tr>`;
 }
 
-// Spielart-Zeile, direkt darunter die Aufteilung nach Rolle.
+// Spielart-Zeile, direkt darunter die Aufteilung nach Rolle und je Rolle
+// nach Modifikator.
 function gameTypeRows(group, totalGames) {
   if (group.rounds.length === 0) {
     return categoryRow(group.label, group.rounds, totalGames);
   }
   return (
     categoryRow(group.label, group.rounds, totalGames) +
-    group.roles.map((r) => categoryRow(r.label, r.rounds, totalGames, "statsSubRow")).join("")
+    group.roles
+      .map(
+        (r) =>
+          categoryRow(r.label, r.rounds, totalGames, "statsSubRow") +
+          r.multipliers
+            .map((m) => categoryRow(m.label, m.rounds, totalGames, "statsSubRow statsSubSubRow"))
+            .join("")
+      )
+      .join("")
   );
 }
 

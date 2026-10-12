@@ -107,6 +107,21 @@ describe("breakdownByGameType", () => {
     );
   });
 
+  test("Rolle nach Modifikator unterteilt, nur vorhandene", () => {
+    const nicht = byType.Sauspiel.roles.find((r) => r.role === "Nichtspieler");
+    assert.deepEqual(
+      nicht.multipliers.map((m) => [m.multiplier, m.rounds.length]),
+      [
+        ["Schneiderfrei", 1],
+        ["Schneider", 1],
+      ]
+    );
+    const ramsch = breakdownByGameType([round("Ramsch, Spieler", 0.3)]).find(
+      (g) => g.type === "Ramsch"
+    );
+    assert.deepEqual(ramsch.roles[0].multipliers, []);
+  });
+
   test("Unterzeilen ergeben zusammen die Spielart", () => {
     for (const group of Object.values(byType)) {
       const sub = group.roles.reduce((n, r) => n + r.rounds.length, 0);

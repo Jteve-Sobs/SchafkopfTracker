@@ -257,6 +257,12 @@ h2 {
 .statsSubRow td:first-child {
   padding-left: 28px;
 }
+.statsSubSubRow td {
+  font-size: 12px;
+}
+.statsSubRow.statsSubSubRow td:first-child {
+  padding-left: 48px;
+}
 .dark .statsSubRow td {
   color: #aaa;
 }
