@@ -97,3 +97,71 @@ export function breakdownByMultiplier(rounds) {
       rounds: rounds.filter((r) => parseGame(r.game).multiplier === multiplier),
     }));
 }
+
+// Archiv-Zeitstempel haben das Format "DD-MM-YYYY_HH-MM-SS" (generateTimestamp
+// in storage.js). Für Sortierung und schöne Anzeige zurück in ein Date parsen.
+export function parseArchiveTimestamp(ts) {
+  const [datePart = "", timePart] = String(ts ?? "").split("_");
+  const [day, month, year] = datePart.split("-").map(Number);
+  const [hour, minute, second] = (timePart || "").split("-").map(Number);
+  return new Date(year, (month || 1) - 1, day, hour || 0, minute || 0, second || 0);
+}
+
+// Runden aus älteren Versionen haben kein eigenes "time". Für die zeitliche
+// Auswertung reicht aber das Datum - das liefert der Zeitstempel der
+// archivierten Session. Er wird als sessionTime angehängt (nicht als time),
+// damit klar bleibt, dass es keine echte Uhrzeit der Runde ist.
+export function withSessionTime(history, timestamp) {
+  const sessionTime = parseArchiveTimestamp(timestamp);
+  if (Number.isNaN(sessionTime.getTime())) return history;
+  return history.map((r) => (r.time ? r : { ...r, sessionTime }));
+}
+
+// Datum einer Runde: eigene Uhrzeit, sonst Datum der Session, sonst null.
+export function roundDate(r) {
+  if (r.time) return new Date(r.time);
+  return r.sessionTime ?? null;
+}
+
+const WEEKDAY_ORDER = [1, 2, 3, 4, 5, 6, 0]; // Montag..Sonntag (JS: 0 = Sonntag)
+
+export function computeTimeTrends(rounds) {
+  const dated = rounds.filter((r) => roundDate(r));
+  if (dated.length === 0) return null;
+
+  const byMonth = new Map();
+  const byWeekday = new Map();
+
+  const add = (map, key, label, amount) => {
+    if (!map.has(key)) map.set(key, { label, count: 0, sum: 0 });
+    const entry = map.get(key);
+    entry.count++;
+    entry.sum += amount;
+  };
+
+  for (const r of dated) {
+    const date = roundDate(r);
+    add(
+      byMonth,
+      `${date.getFullYear()}-${String(date.getMonth()).padStart(2, "0")}`,
+      date.toLocaleDateString("de-DE", { year: "numeric", month: "long" }),
+      r.amount
+    );
+    add(
+      byWeekday,
+      date.getDay(),
+      date.toLocaleDateString("de-DE", { weekday: "long" }),
+      r.amount
+    );
+  }
+
+  const months = [...byMonth.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([, v]) => v);
+  const weekdays = WEEKDAY_ORDER.filter((d) => byWeekday.has(d)).map((d) => byWeekday.get(d));
+
+  return {
+    months,
+    weekdays,
+    sessionDatedCount: dated.filter((r) => !r.time).length,
+    untrackedCount: rounds.length - dated.length,
+  };
+}

@@ -9,7 +9,14 @@ import {
   filterRounds,
   summarize,
   breakdownByGameType,
+  parseArchiveTimestamp,
+  withSessionTime,
+  roundDate,
+  computeTimeTrends,
 } from "../js/statsData.js";
+import { readdirSync, readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import path from "node:path";
 
 const round = (game, amount) => ({ amount, game, teammates: [] });
 
@@ -151,5 +158,58 @@ describe("breakdownByGameType", () => {
         ["Mitspieler", 1],
       ]
     );
+  });
+});
+
+describe("Datum aus Archiv-Zeitstempel", () => {
+  test("parseArchiveTimestamp liest DD-MM-YYYY_HH-MM-SS", () => {
+    const d = parseArchiveTimestamp("17-09-2025_20-21-03");
+    assert.deepEqual(
+      [d.getFullYear(), d.getMonth(), d.getDate(), d.getHours(), d.getMinutes()],
+      [2025, 8, 17, 20, 21]
+    );
+  });
+
+  test("Runden ohne time bekommen sessionTime, Runden mit time bleiben", () => {
+    const timed = { ...round("Wenz, Spieler, Schneiderfrei", 1), time: "2025-10-22T16:15:46.982Z" };
+    const [old, kept] = withSessionTime([round("-", 0.2), timed], "17-09-2025_20-21-03");
+    assert.equal(roundDate(old).getDate(), 17);
+    assert.equal(old.time, undefined);
+    assert.equal(kept, timed);
+  });
+
+  test("ungültiger Zeitstempel lässt die Runden unverändert", () => {
+    const history = [round("-", 0.2)];
+    assert.equal(withSessionTime(history, "kaputt"), history);
+  });
+
+  test("Zeit-Trends zählen Runden mit Session-Datum mit", () => {
+    const rounds = [
+      ...withSessionTime([round("-", 0.2), round("-", -0.1)], "17-09-2025_20-21-03"),
+      { ...round("Sauspiel, Spieler, Schneiderfrei", 0.5), time: "2025-10-22T18:00:00.000Z" },
+      round("-", 1), // weder time noch Session
+    ];
+    const t = computeTimeTrends(rounds);
+    assert.deepEqual(t.months.map((m) => m.count), [2, 1]);
+    assert.deepEqual(t.weekdays.map((w) => [w.label, w.count]), [["Mittwoch", 3]]);
+    assert.equal(t.sessionDatedCount, 2);
+    assert.equal(t.untrackedCount, 1);
+  });
+});
+
+const testDir = path.dirname(fileURLToPath(import.meta.url));
+const realDataFile = readdirSync(testDir).find((f) =>
+  /^schafkopf_tracker_history_.*\.json$/.test(f)
+);
+
+describe("Zeit-Trends mit echtem Export", { skip: !realDataFile && "keine schafkopf_tracker_history_*.json in test/ gefunden" }, () => {
+  test("keine Archiv-Runde fällt mehr aus den Zeit-Trends heraus", () => {
+    const { archive } = JSON.parse(readFileSync(path.join(testDir, realDataFile), "utf8"));
+    const rounds = archive.flatMap((e) => withSessionTime(e.data.history.slice(1), e.timestamp));
+    const t = computeTimeTrends(rounds);
+    assert.equal(t.untrackedCount, 0);
+    assert.ok(t.sessionDatedCount > 0);
+    const total = t.months.reduce((s, m) => s + m.count, 0);
+    assert.equal(total, rounds.length);
   });
 });

@@ -5,9 +5,11 @@ import {
   filterRounds,
   summarize,
   breakdownByGameType,
+  parseArchiveTimestamp,
+  withSessionTime,
+  roundDate,
+  computeTimeTrends,
 } from "./statsData.js";
-
-const WEEKDAY_ORDER = [1, 2, 3, 4, 5, 6, 0]; // Montag..Sonntag (JS: 0 = Sonntag)
 const CATEGORY_COLUMNS = 5;
 
 const formatPercent = (value) =>
@@ -48,9 +50,8 @@ function gameTypeRows(group, totalGames) {
 }
 
 function formatRoundRef(entry) {
-  const when = entry.time
-    ? ` – ${new Date(entry.time).toLocaleDateString("de-DE")}`
-    : "";
+  const date = roundDate(entry);
+  const when = date ? ` – ${date.toLocaleDateString("de-DE")}` : "";
   return `${formatCurrency(entry.amount)} (${entry.game}${when})`;
 }
 
@@ -129,47 +130,6 @@ function archiveContent(data) {
   return summary + categoryTable + metricsTable;
 }
 
-function computeTimeTrends(rounds) {
-  const timed = rounds.filter((r) => r.time);
-  if (timed.length === 0) return null;
-
-  const byMonth = new Map();
-  const byWeekday = new Map();
-
-  for (const r of timed) {
-    const date = new Date(r.time);
-
-    const monthSortKey = `${date.getFullYear()}-${String(date.getMonth()).padStart(2, "0")}`;
-    if (!byMonth.has(monthSortKey)) {
-      byMonth.set(monthSortKey, {
-        label: date.toLocaleDateString("de-DE", { year: "numeric", month: "long" }),
-        count: 0,
-        sum: 0,
-      });
-    }
-    const m = byMonth.get(monthSortKey);
-    m.count++;
-    m.sum += r.amount;
-
-    const weekday = date.getDay();
-    if (!byWeekday.has(weekday)) {
-      byWeekday.set(weekday, {
-        label: date.toLocaleDateString("de-DE", { weekday: "long" }),
-        count: 0,
-        sum: 0,
-      });
-    }
-    const w = byWeekday.get(weekday);
-    w.count++;
-    w.sum += r.amount;
-  }
-
-  const months = [...byMonth.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([, v]) => v);
-  const weekdays = WEEKDAY_ORDER.filter((d) => byWeekday.has(d)).map((d) => byWeekday.get(d));
-
-  return { months, weekdays, untrackedCount: rounds.length - timed.length };
-}
-
 function renderTrendsTable(rows, headerLabel) {
   const body = rows
     .map(
@@ -189,19 +149,13 @@ function renderTimeTrends(rounds) {
   html += renderTrendsTable(trends.months, "Monat");
   html += "<h3>Nach Wochentag</h3>";
   html += renderTrendsTable(trends.weekdays, "Wochentag");
+  if (trends.sessionDatedCount > 0) {
+    html += `<p><small>${trends.sessionDatedCount} Runde(n) ohne eigene Uhrzeit – Datum aus dem Archiv-Zeitstempel der Session übernommen.</small></p>`;
+  }
   if (trends.untrackedCount > 0) {
     html += `<p><small>${trends.untrackedCount} Runde(n) ohne Zeitstempel nicht berücksichtigt.</small></p>`;
   }
   return html;
-}
-
-// Archiv-Zeitstempel haben das Format "DD-MM-YYYY_HH-MM-SS" (generateTimestamp
-// in storage.js). Für Sortierung und schöne Anzeige zurück in ein Date parsen.
-function parseArchiveTimestamp(ts) {
-  const [datePart, timePart] = ts.split("_");
-  const [day, month, year] = datePart.split("-").map(Number);
-  const [hour, minute, second] = (timePart || "").split("-").map(Number);
-  return new Date(year, (month || 1) - 1, day, hour || 0, minute || 0, second || 0);
 }
 
 function formatArchiveTimestamp(ts) {
@@ -229,7 +183,7 @@ function renderArchiveList(archive) {
         entry.data.balance
       )} · ${rounds} Runde(n)`;
       return `<details class="archiveEntry"><summary>${summary}</summary>${archiveContent(
-        entry.data.history
+        withSessionTime(entry.data.history, entry.timestamp)
       )}</details>`;
     })
     .join("");
@@ -254,7 +208,9 @@ function renderStatistics() {
   // Sonst zählt jede archivierte Session ihren eigenen Start-Marker als
   // Phantom-Runde mit (bei 48 Archiven z.B. 938 statt 890 echte Runden).
   const allRounds = [
-    ...data.archive.flatMap((entry) => entry.data.history.slice(1)),
+    ...data.archive.flatMap((entry) =>
+      withSessionTime(entry.data.history.slice(1), entry.timestamp)
+    ),
     ...data.current.slice(1),
   ];
   const allEntries = [{ amount: 0, game: "Start", teammates: [] }, ...allRounds];
