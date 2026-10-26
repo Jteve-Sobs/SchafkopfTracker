@@ -286,3 +286,79 @@ h2 {
 .dark .archiveEntry summary {
   background: #1e1e1e;
 }
+
+/* Achievements */
+#achievementsBtn {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  z-index: 1000;
+  padding: 7px 8px;
+  font-size: 14px;
+  background-color: #333;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+.achievementGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 8px;
+  text-align: left;
+}
+.achievementCard {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 10px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 13px;
+  opacity: 0.6;
+}
+.achievementCard.unlocked {
+  opacity: 1;
+  border-color: #e0a800;
+  background: #fff8e1;
+}
+.dark .achievementCard {
+  border-color: #444;
+}
+.dark .achievementCard.unlocked {
+  border-color: #c99700;
+  background: #2b2410;
+}
+.achievementCard:not(.unlocked) .achievementIcon {
+  filter: grayscale(1);
+}
+.achievementIcon {
+  font-size: 28px;
+}
+.achievementText {
+  flex: 1;
+  min-width: 0;
+}
+.achievementText small {
+  color: #777;
+}
+.dark .achievementText small {
+  color: #aaa;
+}
+.achievementProgress {
+  height: 6px;
+  margin: 4px 0 2px;
+  border-radius: 3px;
+  background: #ddd;
+  overflow: hidden;
+}
+.achievementProgress div {
+  height: 100%;
+  background: #16a1e7;
+}
+.dark .achievementProgress {
+  background: #333;
+}
+.achievementToastItem {
+  margin: 4px 0;
+}

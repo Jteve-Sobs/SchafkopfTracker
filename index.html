@@ -13,6 +13,7 @@
   </head>
   <body>
     <button id="toggleDark">🌗</button>
+    <button id="achievementsBtn" title="Achievements">🏆</button>
     <h1>Bilanz: <span id="balance">0.00</span></h1>
     <!-- todo: add legacy option -->
     <!-- <div>Ausgewählt: <span id="selectedAmount"></span></div>
@@ -124,6 +125,13 @@
         <div id="currentStats"></div>
         <div id="allStats"></div>
         <div id="archiveStats"></div>
+      </div>
+    </div>
+    <div id="achievementsModal" class="modal">
+      <div class="modal-content">
+        <span class="close" id="closeAchievements">&times;</span>
+        <h1>Achievements</h1>
+        <div id="achievementsContent"></div>
       </div>
     </div>
     <footer id="version">Loading...</footer>

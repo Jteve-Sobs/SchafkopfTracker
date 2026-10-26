@@ -13,6 +13,7 @@ import "./storage.js";
 import "./chart.js";
 import "./archive.js";
 import "./stats.js";
+import "./achievements.js";
 import { updateLocalStorage } from "./input.js";
 
 window.App = window.App || {};

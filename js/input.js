@@ -9,6 +9,7 @@ import {
   updateAmount,
 } from "./gameLogic.js";
 import { updateChart } from "./chart.js";
+import { checkAchievements, checkAndNotifyAchievements } from "./achievements.js";
 
 export function formatCurrency(value) {
   return parseFloat(value).toLocaleString("de-DE", {
@@ -90,6 +91,7 @@ function reset() {
       window.App.balance = 0;
       window.App.history = [{ amount: 0, game: "Start", teammates: [] }];
       updateLocalStorage();
+      checkAchievements();
       updateBalance();
       updateChart();
       updateSelectedAmount(window.App.tempAmount);
@@ -155,6 +157,7 @@ function deleteLastRound() {
       updateBalance();
       updateSelectedAmount(window.App.tempAmount);
       updateLocalStorage();
+      checkAchievements();
       updateChart();
     }
   });
@@ -199,6 +202,8 @@ function confirmTransaction(type = "plus") {
   resetSelectorButtonsActionvationToDefault();
 
   updateSelectedAmount(window.App.balance);
+
+  checkAndNotifyAchievements();
 }
 
 export function updateLocalStorage() {

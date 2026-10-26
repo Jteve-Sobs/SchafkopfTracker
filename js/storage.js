@@ -3,6 +3,7 @@ import { updateLocalStorage } from "./input.js";
 import { updateBalance } from "./gameLogic.js";
 import { updateChart } from "./chart.js";
 import { displayArchive } from "./archive.js";
+import { getAchievementState, setAchievementState } from "./achievements.js";
 
 export function generateTimestamp() {
   const now = new Date();
@@ -20,6 +21,7 @@ function exportHistory() {
     historyVersion: 2,
     current: window.App.history,
     archive: JSON.parse(localStorage.getItem("archive") || "{}"),
+    achievements: getAchievementState(),
   };
   const blob = new Blob([JSON.stringify(data, null, 2)], {
     type: "application/json",
@@ -61,6 +63,9 @@ document
             errorOccurred = true;
             errorMessage =
               "Die Historie konnte nicht geladen werden. Bitte überprüfen Sie die Datei.";
+          }
+          if (imported.achievements && imported.achievements.since) {
+            setAchievementState(imported.achievements);
           }
           if (imported.archive) {
             localStorage.setItem("archive", JSON.stringify(imported.archive));

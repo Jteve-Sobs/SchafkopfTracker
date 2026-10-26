@@ -4,6 +4,7 @@ import { updateLocalStorage } from "./input.js";
 import { updateBalance } from "./gameLogic.js";
 import { updateChart } from "./chart.js";
 import { updateSelectedAmount } from "./input.js";
+import { checkAchievements, notifyAchievements } from "./achievements.js";
 
 function archiveData() {
   // Hole die aktuellen Daten (Balance und History)
@@ -26,6 +27,9 @@ function archiveData() {
 
   displayArchive(); // Aktualisiere die Anzeige des Archivs
 
+  // Erst nach dem Archiv-Toast anzeigen, Swal zeigt nur einen gleichzeitig
+  const newAchievements = checkAchievements();
+
   // Benachrichtige den Benutzer
   var timerInterval;
   Swal.fire({
@@ -47,6 +51,7 @@ function archiveData() {
     willClose: () => {
       clearInterval(timerInterval);
     },
+    didClose: () => notifyAchievements(newAchievements),
   });
 }
 function loadArchivedData(timestamp) {
@@ -169,6 +174,7 @@ function deleteArchivedData(timestamp) {
 
       // Liste neu anzeigen
       displayArchive();
+      checkAchievements();
 
       Swal.fire({
         title: "Gelöscht!",
