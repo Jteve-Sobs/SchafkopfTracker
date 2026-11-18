@@ -116,8 +116,8 @@ describe("lifetimeBalance", () => {
 });
 
 describe("Achievements", () => {
-  test("ohne Runden ist nichts erreicht", () => {
-    assert.deepEqual(reached({ archive: [], current: [START] }), []);
+  test("ohne Runden ist nur \"Hello World\" erreicht", () => {
+    assert.deepEqual(reached({ archive: [], current: [START] }), ["first-open"]);
   });
 
   test("Siegesserie wird von 0-€-Runden unterbrochen", () => {

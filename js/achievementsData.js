@@ -151,6 +151,8 @@ export function computeAchievementStats(data) {
   const ramsch = parsed.filter((r) => r.type === "Ramsch");
 
   return {
+    // Diese Auswertung läuft nur in der geöffneten App -> immer erreicht
+    appOpened: 1,
     rounds: rounds.length,
     sessions: sessions.length,
     sauspielAsPlayer: count(asPlayer(["Sauspiel"])),
@@ -199,6 +201,7 @@ const tiered = (base, stat, steps) =>
   }));
 
 export const ACHIEVEMENTS = [
+  { id: "first-open", category: "milestones", icon: "📲", title: "Hello World", description: "Die App das erste Mal geöffnet", stat: "appOpened", target: 1 },
   ...tiered(
     { id: "rounds", category: "milestones", description: (n) => `${n} Runden gespielt` },
     "rounds",

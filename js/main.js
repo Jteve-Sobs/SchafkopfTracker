@@ -15,6 +15,7 @@ import "./archive.js";
 import "./stats.js";
 import "./achievements.js";
 import { updateLocalStorage } from "./input.js";
+import { checkAndNotifyAchievements } from "./achievements.js";
 
 window.App = window.App || {};
 
@@ -65,3 +66,7 @@ updateSelectedAmount(window.App.tempAmount);
 setDeleteButtonsEnabled();
 
 updateBalance();
+
+// Beim Start prüfen: schaltet "Hello World" frei und meldet Achievements, die
+// z.B. nach einem Update neu dazugekommen sind
+checkAndNotifyAchievements();
