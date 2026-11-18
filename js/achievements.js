@@ -9,16 +9,20 @@ import {
 
 const STORAGE_KEY = "achievements";
 
-// { since: ISO-Datum der Einführung, unlocked: { id: ISO-Datum } }.
-// Beim ersten Laden wird since auf "jetzt" gesetzt: alte Runden zählen nicht.
+// { unlocked: { id: ISO-Datum } }. Gezählt werden alle Runden seit Beginn
+// der Aufzeichnung. Ein "since" aus älteren Versionen (Stichtag der
+// Einführung) wird ignoriert und beim nächsten Speichern entfernt.
 export function getAchievementState() {
   try {
     const state = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    if (state && state.since) return { unlocked: {}, ...state };
+    if (state && typeof state === "object") {
+      const { since, ...rest } = state;
+      return { ...rest, unlocked: rest.unlocked ?? {} };
+    }
   } catch (e) {
     // kaputter Eintrag -> neu anfangen
   }
-  const state = { since: new Date().toISOString(), unlocked: {} };
+  const state = { unlocked: {} };
   setAchievementState(state);
   return state;
 }
@@ -32,7 +36,7 @@ function currentResults(state) {
     archive: JSON.parse(localStorage.getItem("archive") || "[]"),
     current: window.App.history,
   };
-  return evaluateAchievements(computeAchievementStats(data, state.since));
+  return evaluateAchievements(computeAchievementStats(data));
 }
 
 // Gleicht die Freischaltungen mit den aktuellen Daten ab (sperrt auch wieder,
@@ -110,9 +114,7 @@ function renderAchievements() {
 
   document.getElementById("achievementsContent").innerHTML = `<p class="statsSummary"><strong>${unlockedCount} / ${
     results.length
-  }</strong> freigeschaltet</p><p><small>Es zählen alle Runden seit ${new Date(state.since).toLocaleDateString(
-    "de-DE"
-  )}.</small></p>${sections}`;
+  }</strong> freigeschaltet</p><p><small>Es zählen alle Runden seit Beginn der Aufzeichnung.</small></p>${sections}`;
 }
 
 const modal = document.getElementById("achievementsModal");

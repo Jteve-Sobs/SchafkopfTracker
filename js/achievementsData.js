@@ -1,12 +1,15 @@
 // Reine, DOM-freie Achievement-Logik. Getrennt von achievements.js, damit sie
 // ohne window/document testbar ist (siehe test/achievements.test.js).
 //
-// Gezählt werden nur Runden ab Einführung der Achievements (state.since).
-// Runden ohne eigenen Zeitstempel sind damit automatisch außen vor.
-// Einmal freigeschaltete Achievements bleiben freigeschaltet, auch wenn die
-// Runden später gelöscht werden (Reset, letzte Runde löschen).
+// Gezählt werden alle Runden seit Beginn der Aufzeichnung, auch alte ohne
+// eigenen Zeitstempel. Die bekommen das Datum ihres archivierten Abends
+// (sessionTime, siehe withSessionTime). Alte Runden ohne Spielart ("-")
+// zählen damit für Runden, Abende, Serien und Geld, aber nicht für die
+// spielartabhängigen Achievements. Für die Nachteule zählt nur eine echte
+// Uhrzeit der Runde.
+// Freischaltungen werden mit den Daten abgeglichen (siehe applyUnlocks).
 
-import { parseGame } from "./statsData.js";
+import { parseGame, withSessionTime, roundDate } from "./statsData.js";
 
 export const CATEGORIES = [
   { id: "milestones", label: "Meilensteine" },
@@ -33,8 +36,11 @@ function weekIndex(date) {
   return Math.floor((day + 3) / 7);
 }
 
-function roundKey(r) {
-  return `${new Date(r.time).getTime()}|${r.game}|${r.amount}`;
+// Schlüssel zum Erkennen doppelter Sessions (geladenes Archiv). Alte Runden
+// ohne Zeitstempel werden über ihre Position im Abend erkannt.
+function roundKey(r, index) {
+  if (r.time) return `${new Date(r.time).getTime()}|${r.game}|${r.amount}`;
+  return `#${index}|${r.game}|${r.amount}`;
 }
 
 function longestRun(rounds, predicate) {
@@ -51,67 +57,60 @@ function longestRun(rounds, predicate) {
 // Wird ein Archiv geladen, steht dieselbe Session danach doppelt drin (im
 // Archiv und als aktuelle Runde, später evtl. als zweites Archiv). Sessions,
 // deren Runden alle schon in einer größeren Session vorkommen, fliegen raus.
-export function collectSessions({ archive = [], current = [] }, since) {
-  const sinceMs = new Date(since).getTime();
+export function collectSessions({ archive = [], current = [] }) {
   const raw = [
-    ...archive.map((entry) => ({ history: entry.data?.history ?? [], ended: true })),
+    ...archive.map((entry) => ({
+      history: withSessionTime(entry.data?.history ?? [], entry.timestamp),
+      ended: true,
+    })),
     { history: current, ended: false },
   ];
 
   const sessions = raw
-    .map(({ history, ended }) => ({
-      ended,
-      rounds: history
-        .slice(1)
-        .filter((r) => r.time && new Date(r.time).getTime() >= sinceMs),
-    }))
+    .map(({ history, ended }) => ({ ended, rounds: history.slice(1) }))
     .filter((s) => s.rounds.length > 0)
     .sort((a, b) => b.rounds.length - a.rounds.length || a.ended - b.ended);
 
   const seen = new Set();
   const unique = [];
   for (const s of sessions) {
-    const keys = s.rounds.map(roundKey);
+    const keys = s.rounds.map((r, i) => roundKey(r, i));
     if (keys.every((k) => seen.has(k))) continue;
     keys.forEach((k) => seen.add(k));
     unique.push(s);
   }
 
-  const firstTime = (s) => new Date(s.rounds[0].time).getTime();
+  // Abende ohne Datum (sollte es nicht geben) ans Ende; sort ist stabil.
+  const firstTime = (s) => roundDate(s.rounds[0])?.getTime() ?? Infinity;
   return unique.sort((a, b) => firstTime(a) - firstTime(b));
 }
 
-// Gesamtbilanz über alle Runden, auch die alten ohne Zeitstempel. Doppelte
-// Sessions (siehe oben) werden über die zeitgestempelten Runden erkannt.
-// best = höchster Zwischenstand der Gesamtbilanz nach einer Runde ab since.
-// Damit bleibt "Im Plus" erreicht, wenn die Bilanz danach wieder fällt, und
-// ein Plus aus der Zeit vor der Einführung zählt nicht.
-export function lifetimeBalance({ archive = [], current = [] }, since) {
-  const sinceMs = since === undefined ? Infinity : new Date(since).getTime();
-  const seen = new Set();
+// Ab so vielen Runden zählt die Gesamtbilanz für "Im Plus". Vorher reicht
+// ein Glückstreffer am ersten Abend.
+export const LIFETIME_MIN_ROUNDS = 100;
+
+// Gesamtbilanz über alle Runden (Duplikate nur einmal, siehe collectSessions).
+// best = höchster Zwischenstand der Gesamtbilanz nach einer Runde, in
+// zeitlicher Reihenfolge, frühestens nach der LIFETIME_MIN_ROUNDS-ten Runde.
+// Damit bleibt "Im Plus" erreicht, wenn die Bilanz danach wieder fällt.
+export function lifetimeBalance(data, sessions = collectSessions(data)) {
   let total = 0;
   let best = null;
-  const histories = [...archive.map((e) => e.data?.history ?? []), current];
-  for (const history of histories) {
-    for (const r of history.slice(1)) {
-      if (r.time) {
-        const key = roundKey(r);
-        if (seen.has(key)) continue;
-        seen.add(key);
-      }
+  let n = 0;
+  for (const s of sessions) {
+    for (const r of s.rounds) {
       total += r.amount;
-      if (r.time && new Date(r.time).getTime() >= sinceMs) {
-        best = best === null ? total : Math.max(best, total);
-      }
+      n++;
+      if (n >= LIFETIME_MIN_ROUNDS) best = best === null ? total : Math.max(best, total);
     }
   }
   return { total, best };
 }
 
 // Alle Kennzahlen, die die Achievements brauchen, in einem Durchlauf.
-export function computeAchievementStats(data, since) {
-  const sessions = collectSessions(data, since);
-  const lifetime = lifetimeBalance(data, since);
+export function computeAchievementStats(data) {
+  const sessions = collectSessions(data);
+  const lifetime = lifetimeBalance(data, sessions);
   const rounds = sessions.flatMap((s) => s.rounds);
   const parsed = rounds.map((r) => ({ ...r, ...parseGame(r.game) }));
 
@@ -138,7 +137,9 @@ export function computeAchievementStats(data, since) {
     maxRoundsPerSession = Math.max(maxRoundsPerSession, s.rounds.length);
   }
 
-  const weeks = [...new Set(rounds.map((r) => weekIndex(new Date(r.time))))].sort((a, b) => a - b);
+  const weeks = [
+    ...new Set(rounds.map(roundDate).filter(Boolean).map(weekIndex)),
+  ].sort((a, b) => a - b);
   let consecutiveWeeks = 0;
   let run = 0;
   weeks.forEach((w, i) => {
@@ -156,6 +157,8 @@ export function computeAchievementStats(data, since) {
     soloAsPlayer: count(asPlayer(["Solo"])),
     wenzGeierAsPlayer: count(asPlayer(["Wenz", "Geier"])),
     collectedTypes: COLLECTOR_TYPES.filter((t) => parsed.some(asPlayer([t]))).length,
+    // wie oft die seltenste der vier Spielarten als Spieler gespielt wurde
+    collectorMin: Math.min(...COLLECTOR_TYPES.map((t) => count(asPlayer([t])))),
     sie: count((r) => r.type === "Sie"),
     toutWon: count((r) => r.multiplier === "Tout" && isWin(r)),
     schwarzWon: count((r) => r.multiplier === "Schwarz" && isWin(r)),
@@ -173,6 +176,7 @@ export function computeAchievementStats(data, since) {
     ),
     ramschNoLossStreak: longestRun(ramsch, (r) => r.amount >= 0),
     nightOwl: count((r) => {
+      if (!r.time) return false;
       const hour = new Date(r.time).getHours();
       return hour >= 1 && hour < 5;
     }),
@@ -229,10 +233,14 @@ export const ACHIEVEMENTS = [
     stat: "collectedTypes",
     target: COLLECTOR_TYPES.length,
   },
+  { id: "collector-10", category: "milestones", icon: "🃏", title: "Allrounder", description: "Sauspiel, Geier, Wenz und Solo je 10-mal als Spieler", stat: "collectorMin", target: 10 },
+  { id: "collector-25", category: "milestones", icon: "🃏", title: "Alleskönner", description: "Sauspiel, Geier, Wenz und Solo je 25-mal als Spieler", stat: "collectorMin", target: 25 },
 
   { id: "sie", category: "rare", icon: "👑", title: "Sie!", description: "Ein Sie gespielt", stat: "sie", target: 1 },
   { id: "tout", category: "rare", icon: "🎯", title: "Tout", description: "Ein Tout gewonnen", stat: "toutWon", target: 1 },
   { id: "schwarz", category: "rare", icon: "🖤", title: "Schwarz", description: "Ein Spiel schwarz gewonnen", stat: "schwarzWon", target: 1 },
+  { id: "schwarz-10", category: "rare", icon: "🖤", title: "Schwarzmaler", description: "10 Spiele schwarz gewonnen", stat: "schwarzWon", target: 10 },
+  { id: "schwarz-25", category: "rare", icon: "🖤", title: "Schwarz-Meister", description: "25 Spiele schwarz gewonnen", stat: "schwarzWon", target: 25 },
   { id: "wenz-king", category: "rare", icon: "🤴", title: "Wenz-König", description: "5 Wenz als Spieler in Folge gewonnen", stat: "wenzWinStreak", target: 5 },
 
   ...tiered(
@@ -254,9 +262,11 @@ export const ACHIEVEMENTS = [
   ),
   { id: "big-win", category: "money", icon: "💰", title: "Großer Fang", description: "Eine Runde mit mindestens 5 € gewonnen", stat: "bestRoundCents", target: 500, money: true },
   { id: "zero", category: "money", icon: "⚖️", title: "Schwarze Null", description: "Einen archivierten Abend mit mindestens 10 Runden auf genau 0,00 € beendet", stat: "zeroSessions", target: 1 },
-  { id: "lifetime-plus", category: "money", icon: "📈", title: "Im Plus", description: "Gesamtbilanz über alle Runden (auch alte) im Plus", stat: "lifetimeBestCents", valueStat: "lifetimeCents", target: 1, money: true, showValue: true },
+  { id: "lifetime-plus", category: "money", icon: "📈", title: "Im Plus", description: `Gesamtbilanz nach mindestens ${LIFETIME_MIN_ROUNDS} Runden im Plus`, stat: "lifetimeBestCents", valueStat: "lifetimeCents", target: 1, money: true, showValue: true },
 
   { id: "partner", category: "roles", icon: "🤝", title: "Treuer Partner", description: "25 Sauspiele als Mitspieler gewonnen", stat: "partnerWins", target: 25 },
+  { id: "partner-50", category: "roles", icon: "🤝", title: "Verlässlicher Partner", description: "50 Sauspiele als Mitspieler gewonnen", stat: "partnerWins", target: 50 },
+  { id: "partner-100", category: "roles", icon: "🤝", title: "Partner fürs Leben", description: "100 Sauspiele als Mitspieler gewonnen", stat: "partnerWins", target: 100 },
   { id: "defender", category: "roles", icon: "🛡️", title: "Verteidiger", description: "50 Soli, Wenz oder Geier als Nichtspieler gewonnen", stat: "defenderWins", target: 50 },
   { id: "ramsch-pro", category: "roles", icon: "🐷", title: "Ramsch-Profi", description: "10 Ramsch in Folge ohne Verlust", stat: "ramschNoLossStreak", target: 10 },
 

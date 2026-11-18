@@ -64,7 +64,7 @@ document
             errorMessage =
               "Die Historie konnte nicht geladen werden. Bitte überprüfen Sie die Datei.";
           }
-          if (imported.achievements && imported.achievements.since) {
+          if (imported.achievements && imported.achievements.unlocked) {
             setAchievementState(imported.achievements);
           }
           if (imported.archive) {

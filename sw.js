@@ -3,7 +3,7 @@
 // this file. If APP_VERSION (and therefore this file's content) doesn't
 // change, install/activate never re-runs and cached files (stats.js,
 // chart.js, ...) stay stale forever, no matter what the server serves.
-const APP_VERSION = "0.8.1";
+const APP_VERSION = "0.8.4";
 const CACHE_NAME = "my-app-cache-" + APP_VERSION;
 
 const urlsToCache = [
@@ -34,7 +34,12 @@ self.addEventListener("install", (event) => {
     (async () => {
       console.log("Installing service worker with cache name:", CACHE_NAME);
       const cache = await caches.open(CACHE_NAME);
-      await cache.addAll(urlsToCache);
+      // cache: "reload" bypasses the browser's HTTP cache. Without it,
+      // addAll() can pick up the *previous* version's JS from the HTTP cache
+      // (the server sends no Cache-Control, so browsers cache heuristically
+      // via Last-Modified) and store it under the new version's cache name.
+      // The app would then report the new version but still run old code.
+      await cache.addAll(urlsToCache.map((url) => new Request(url, { cache: "reload" })));
     })()
   );
   self.skipWaiting(); // Force immediate activation of the new SW
