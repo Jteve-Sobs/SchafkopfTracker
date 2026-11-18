@@ -98,6 +98,15 @@ function activateButtonsForGameModes(gameMode) {
         toutButton.classList.remove("active");
         schneiderfreiButton.classList.add("active");
       }
+      // If no option is active, then activate schneiderfrei
+      if (
+        !schneiderfreiButton.classList.contains("active")
+        && !schneiderButton.classList.contains("active")
+        && !schwarzButton.classList.contains("active")
+        && !toutButton.classList.contains("active")
+      ) {
+        schneiderfreiButton.classList.add("active");
+      }
       // Enable Mitspieler button
       mitspielerButton.disabled = false;
       break;
@@ -115,6 +124,15 @@ function activateButtonsForGameModes(gameMode) {
         mitspielerButton.classList.remove("active");
         spielerButton.classList.add("active");
       }
+      // If no option is active, then activate schneiderfrei
+      if (
+        !schneiderfreiButton.classList.contains("active")
+        && !schneiderButton.classList.contains("active")
+        && !schwarzButton.classList.contains("active")
+        && !toutButton.classList.contains("active")
+      ) {
+        schneiderfreiButton.classList.add("active");
+      }
       break;
     case gameModes.Solo:
       // Activate all valid options
@@ -128,6 +146,15 @@ function activateButtonsForGameModes(gameMode) {
       if (mitspielerButton.classList.contains("active")) {
         mitspielerButton.classList.remove("active");
         spielerButton.classList.add("active");
+      }
+      // If no option is active, then activate schneiderfrei
+      if (
+        !schneiderfreiButton.classList.contains("active")
+        && !schneiderButton.classList.contains("active")
+        && !schwarzButton.classList.contains("active")
+        && !toutButton.classList.contains("active")
+      ) {
+        schneiderfreiButton.classList.add("active");
       }
       break;
     case gameModes.Sie:
